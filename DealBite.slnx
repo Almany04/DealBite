@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="DealBite.API/DealBite.API.csproj" Id="e53ea631-ec2b-4c06-9e43-48b69f0b9255" />
+  <Project Path="DealBite.Application/DealBite.Application.csproj" Id="e8deaefe-1c71-4064-a1b6-7a4729182dc9" />
+  <Project Path="DealBite.Domain/DealBite.Domain.csproj" />
+  <Project Path="DealBite.Infrastructure/DealBite.Infrastructure.csproj" />
+</Solution>
