@@ -12,7 +12,7 @@ namespace DealBite.Domain.Entities
         public required string City { get; set; }
         public string? ZipCode { get; set; }
 
-        public GeoCoordinate Coordinate { get; set; }
+        public GeoCoordinate Coordinates { get; set; }
 
         public Guid StoreId { get; set; }
         public Store? Store { get; set; }

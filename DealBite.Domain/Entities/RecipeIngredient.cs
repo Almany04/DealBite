@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DealBite.Domain.Entities
 {
-    public class RecipeIngredients:BaseEntity
+    public class RecipeIngredient:BaseEntity
     {
         public double Amount { get; set; }
         public ProductUnit UnitType { get; set; }
