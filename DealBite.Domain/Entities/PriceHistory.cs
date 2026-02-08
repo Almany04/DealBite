@@ -12,5 +12,7 @@ namespace DealBite.Domain.Entities
         public DateTimeOffset RecordedAt { get; set; }
         public Guid ProductId { get; set; }
         public Product? Product { get; set; }
+        public Guid StoreId { get; set; }
+        public Store? Store { get; set; }
     }
 }
