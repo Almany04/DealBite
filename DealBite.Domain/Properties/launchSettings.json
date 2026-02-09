@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "DealBite.Domain": {
+      "commandName": "Project"
+    },
+    "Profile 1": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Dev\\DealBite\\DealBite.API\\DealBite.API.csproj"
+    }
+  }
+}

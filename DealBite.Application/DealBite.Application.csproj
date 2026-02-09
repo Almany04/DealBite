@@ -5,12 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="16.0.0" />
     <PackageReference Include="MediatR" Version="14.0.0" />
-  </ItemGroup>
 
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DealBite.Domain\DealBite.Domain.csproj" />
   </ItemGroup>

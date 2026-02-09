@@ -12,7 +12,8 @@ namespace DealBite.Infrastructure.Persistence.Configurations
         {
             builder.Ignore(x => x.Coordinates);
 
-            builder.Property<Point>("Coordinates")
+            builder.Property<Point>("Location")
+                .HasColumnName("Coordinates")
                 .HasColumnType("geography(Point, 4326)")
                 .IsRequired();
         }

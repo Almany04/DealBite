@@ -24,7 +24,7 @@ namespace DealBite.Infrastructure.Repositories
                 var point = new Point(location.Coordinates.Longitude, location.Coordinates.Latitude)
                 { SRID = 4326 };
 
-                _context.Entry(location).Property<Point>("Coordinates").CurrentValue = point;
+                _context.Entry(location).Property<Point>("Location").CurrentValue = point;
             }
 
             return await base.AddAsync(entity);
@@ -35,13 +35,13 @@ namespace DealBite.Infrastructure.Repositories
 
             var dbResults = await _context.StoreLocations
                 .Include(sl=>sl.Store)
-                .Where(sl=>EF.Property<Point>(sl, "Coordinates").IsWithinDistance(userLocation, radiusInMeters))
-                .OrderBy(sl=>EF.Property<Point>(sl, "Coordinates").Distance(userLocation))
+                .Where(sl=>EF.Property<Point>(sl, "Location").IsWithinDistance(userLocation, radiusInMeters))
+                .OrderBy(sl=>EF.Property<Point>(sl, "Location").Distance(userLocation))
                 .ToListAsync();
 
             foreach (var loc in dbResults)
             {
-                var point=_context.Entry(loc).Property<Point>("Coordinates").CurrentValue;
+                var point=_context.Entry(loc).Property<Point>("Location").CurrentValue;
                 if(point != null)
                 {
                     loc.Coordinates=new GeoCoordinate(point.Y, point.X);
