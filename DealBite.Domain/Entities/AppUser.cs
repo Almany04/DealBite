@@ -1,9 +1,5 @@
 ﻿using DealBite.Domain.Common;
-using DealBite.Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Text;
+using NetTopologySuite.Geometries;
 
 namespace DealBite.Domain.Entities
 {
