@@ -10,12 +10,9 @@ namespace DealBite.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<StoreLocation> builder)
         {
-            builder.Ignore(x => x.Coordinates);
-
-            builder.Property<Point>("Location")
-                .HasColumnName("Coordinates")
-                .HasColumnType("geography(Point, 4326)")
-                .IsRequired();
+            builder.Property(x => x.Coordinates)
+                    .HasColumnType("geography(Point, 4326)")
+                    .IsRequired();
         }
     }
 }

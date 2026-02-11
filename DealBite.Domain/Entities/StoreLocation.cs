@@ -1,8 +1,6 @@
 ﻿using DealBite.Domain.Common;
-using DealBite.Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using NetTopologySuite.Geometries;
+
 
 namespace DealBite.Domain.Entities
 {
@@ -12,7 +10,7 @@ namespace DealBite.Domain.Entities
         public required string City { get; set; }
         public string? ZipCode { get; set; }
 
-        public GeoCoordinate Coordinates { get; set; }
+        public required Point Coordinates { get; set; }
 
         public Guid StoreId { get; set; }
         public Store? Store { get; set; }

@@ -13,11 +13,9 @@ namespace DealBite.Infrastructure.Persistence.Configurations
         {
             builder.Property(u => u.Id).ValueGeneratedNever();
 
-            builder.ComplexProperty(x => x.DefaultLocation, loc =>
-            {
-                loc.Property(c => c.Latitude).HasColumnName("Latitude");
-                loc.Property(c => c.Longitude).HasColumnName("Longitude");
-            });
+            
+            builder.Property(x => x.DefaultLocation)
+                   .HasColumnType("geography(Point, 4326)");
         }
     }
 }

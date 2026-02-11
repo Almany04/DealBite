@@ -11,6 +11,6 @@ namespace DealBite.Domain.Entities
         public string? Description { get; set; }
         public int PrepTimeMinutes { get; set; }
         public string? ImageUrl { get; set; }
-        public ICollection<RecipeIngredient> Ingredients { get; set; }
+        public ICollection<RecipeIngredient> Ingredients { get; set; } = [];
     }
 }
