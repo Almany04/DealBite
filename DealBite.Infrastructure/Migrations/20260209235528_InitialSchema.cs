@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DealBite.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -114,7 +114,7 @@ namespace DealBite.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    storeSlug = table.Column<int>(type: "integer", nullable: false),
+                    StoreSlug = table.Column<int>(type: "integer", nullable: false),
                     BrandColor = table.Column<string>(type: "text", nullable: true),
                     LogoUrl = table.Column<string>(type: "text", nullable: true),
                     WebsiteUrl = table.Column<string>(type: "text", nullable: true),
@@ -264,6 +264,7 @@ namespace DealBite.Infrastructure.Migrations
                     NormalizedName = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
                     AiGeneratedImageUrl = table.Column<string>(type: "text", nullable: true),
+                    Quantity = table.Column<double>(type: "double precision", nullable: false),
                     UnitType = table.Column<int>(type: "integer", nullable: false),
                     IsIngredient = table.Column<bool>(type: "boolean", nullable: false),
                     CategoryId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -287,8 +288,8 @@ namespace DealBite.Infrastructure.Migrations
                     Address = table.Column<string>(type: "text", nullable: false),
                     City = table.Column<string>(type: "text", nullable: false),
                     ZipCode = table.Column<string>(type: "text", nullable: true),
-                    Coordinates = table.Column<Point>(type: "geography(Point, 4326)", nullable: false),
-                    StoreId = table.Column<Guid>(type: "uuid", nullable: false)
+                    StoreId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Coordinates = table.Column<Point>(type: "geography(Point, 4326)", nullable: false)
                 },
                 constraints: table =>
                 {

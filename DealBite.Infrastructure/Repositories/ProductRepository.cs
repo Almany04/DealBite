@@ -14,6 +14,15 @@ namespace DealBite.Infrastructure.Repositories
         {
         }
 
+        public async Task<IEnumerable<Product>> GetAllWithDetailsAsync()
+        {
+           return await _context.Products
+                .Include(p=>p.Category)
+                .Include(p=>p.Prices)
+                .ThenInclude(pp=>pp.Store)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(Guid categoryId)
         {
             return await _context.Products

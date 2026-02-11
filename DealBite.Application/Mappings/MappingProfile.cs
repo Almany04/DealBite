@@ -16,6 +16,21 @@ namespace DealBite.Application.Mappings
                 .ForMember(dest => dest.Longitude, opt => opt.MapFrom(src => src.Coordinates.Longitude))
 
                 .ForMember(dest => dest.DistanceInMeters, opt => opt.Ignore());
+            CreateMap<ProductPrice, ProductPriceDto>()
+                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price.Amount))
+                .ForMember(dest => dest.OldPrice, opt => opt.MapFrom(src => src.OriginalPrice != null ? src.OriginalPrice.Value.Amount : (decimal?)null))
+                .ForMember(dest => dest.StoreName, opt => opt.MapFrom(src => src.Store != null ? src.Store.Name : "Ismeretlen"))
+                .ForMember(dest => dest.PriceSource, opt => opt.MapFrom(src => src.Source.ToString())); 
+
+            
+            CreateMap<Product, ProductDto>()
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.AiGeneratedImageUrl))
+                
+                .ForMember(dest => dest.Unit, opt => opt.MapFrom(src => src.UnitType.ToString()))
+               
+                .ForMember(dest => dest.Prices, opt => opt.MapFrom(src => src.Prices));
         }
     }
+    
 }

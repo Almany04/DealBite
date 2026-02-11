@@ -1,12 +1,11 @@
 ﻿using DealBite.Application.Interfaces.Repositories;
 using DealBite.Domain.Entities;
 using DealBite.Domain.Enums;
-using DealBite.Domain.ValueObjects;
+using DealBite.Domain.ValueObjects; // Itt van a te GeoCoordinate és Money osztályod
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace DealBite.Infrastructure.Persistence
 {
@@ -14,26 +13,25 @@ namespace DealBite.Infrastructure.Persistence
     {
         public static async Task InitializeAsync(IServiceProvider serviceProvider)
         {
-           
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
             var storeRepository = serviceProvider.GetRequiredService<IStoreRepository>();
 
             Console.WriteLine("--- ADATBÁZIS INITIALIZÁLÁS INDUL ---");
+
+            // Migráció futtatása
             await context.Database.MigrateAsync();
 
-
-            // --- ITT A VÁLTOZÁS: ELŐSZÖR MINDENT TÖRLÜNK ---
+            // 1. TAKARÍTÁS (Sorrend fontos!)
             Console.WriteLine(">>> RÉGI ADATOK TÖRLÉSE... <<<");
-            context.StoreLocations.RemoveRange(context.StoreLocations);
-            context.ProductPrices.RemoveRange(context.ProductPrices); // Ha már van ilyen
+            context.ProductPrices.RemoveRange(context.ProductPrices);
             context.Products.RemoveRange(context.Products);
+            context.StoreLocations.RemoveRange(context.StoreLocations);
             context.Stores.RemoveRange(context.Stores);
             context.Categories.RemoveRange(context.Categories);
             await context.SaveChangesAsync();
-            // -----------------------------------------------
 
-            Console.WriteLine(">>> ÚJ ADATOK BETÖLTÉSE... <<<");
-            Console.WriteLine("--- ADATOK FELTÖLTÉSE FOLYAMATBAN... ---");
+            // 2. KATEGÓRIÁK
+            Console.WriteLine(">>> KATEGÓRIÁK LÉTREHOZÁSA... <<<");
             var catDairy = new Category { Name = "Tejtermékek", Slug = "tejtermekek" };
             var catBakery = new Category { Name = "Pékáru", Slug = "pekaru" };
             var catMeat = new Category { Name = "Húsok", Slug = "husok" };
@@ -41,18 +39,21 @@ namespace DealBite.Infrastructure.Persistence
             await context.Categories.AddRangeAsync(catDairy, catBakery, catMeat);
             await context.SaveChangesAsync();
 
-            
+            // 3. BOLTOK ÉS HELYSZÍNEK
+            Console.WriteLine(">>> BOLTOK LÉTREHOZÁSA... <<<");
 
-            
             var lidl = new Store
             {
                 Name = "Lidl",
                 StoreSlug = StoreSlug.Lidl,
                 BrandColor = "#0050AA",
-                LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/9/91/Lidl-Logo.svg"
+                LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/9/91/Lidl-Logo.svg",
+                IsActive = true,
+                WebsiteUrl = "https://www.lidl.hu"
             };
 
-            
+            // ITT A LÉNYEG: Most már használhatod a saját GeoCoordinate osztályodat!
+            // Az ApplicationDbContext át fogja alakítani Point-tá a háttérben.
             lidl.Locations.Add(new StoreLocation
             {
                 Address = "Király u. 112.",
@@ -69,13 +70,14 @@ namespace DealBite.Infrastructure.Persistence
                 Coordinates = new GeoCoordinate(47.5098, 19.0347)
             });
 
-            
             var spar = new Store
             {
                 Name = "Spar",
                 StoreSlug = StoreSlug.Spar,
                 BrandColor = "#007A33",
-                LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Spar-Logo.svg/1200px-Spar-Logo.svg.png"
+                LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Spar-Logo.svg/1200px-Spar-Logo.svg.png",
+                IsActive = true,
+                WebsiteUrl = "https://www.spar.hu"
             };
 
             spar.Locations.Add(new StoreLocation
@@ -86,25 +88,63 @@ namespace DealBite.Infrastructure.Persistence
                 Coordinates = new GeoCoordinate(47.5055, 19.0384)
             });
 
-            
-            await storeRepository.AddAsync(lidl);
-            await storeRepository.AddAsync(spar);
+            await context.Stores.AddRangeAsync(lidl, spar);
+            await context.SaveChangesAsync();
 
-            
+            // 4. TERMÉKEK
+            Console.WriteLine(">>> TERMÉKEK LÉTREHOZÁSA... <<<");
             var milk = new Product
             {
                 Name = "Pilos Tej 2,8%",
                 NormalizedName = "pilos tej 2,8%",
-                Quantity = 1,         
+                Quantity = 1,
                 UnitType = ProductUnit.L,
                 AiGeneratedImageUrl = "https://example.com/milk.jpg",
-                IsIngredient = true,    
-                CategoryId = catDairy.Id
+                IsIngredient = true,
+                CategoryId = catDairy.Id,
+                Category = catDairy
             };
 
             await context.Products.AddAsync(milk);
             await context.SaveChangesAsync();
-            Console.WriteLine("--- ADATOK SIKERESEN MENTVE ---");
+
+            // 5. ÁRAK
+            Console.WriteLine(">>> ÁRAK HOZZÁRENDELÉSE... <<<");
+
+            var milkPriceLidl = new ProductPrice
+            {
+                ProductId = milk.Id,
+                Product = milk,
+                StoreId = lidl.Id,
+                Store = lidl,
+                Price = new Money(299), // Money struct defaultja HUF
+                Source = PriceSource.Manual,
+                LastScrapedAt = DateTimeOffset.UtcNow,
+                ValidFrom = DateOnly.FromDateTime(DateTime.Now),
+                ValidTo = DateOnly.FromDateTime(DateTime.Now.AddDays(14)),
+                IsOnSale = false,
+                UnitPriceAmount = 299
+            };
+
+            var milkPriceSpar = new ProductPrice
+            {
+                ProductId = milk.Id,
+                Product = milk,
+                StoreId = spar.Id,
+                Store = spar,
+                Price = new Money(349), // Drágább a Sparban
+                Source = PriceSource.Manual,
+                LastScrapedAt = DateTimeOffset.UtcNow,
+                ValidFrom = DateOnly.FromDateTime(DateTime.Now),
+                ValidTo = DateOnly.FromDateTime(DateTime.Now.AddDays(14)),
+                IsOnSale = false,
+                UnitPriceAmount = 349
+            };
+
+            await context.ProductPrices.AddRangeAsync(milkPriceLidl, milkPriceSpar);
+            await context.SaveChangesAsync();
+
+            Console.WriteLine("--- ADATBÁZIS INITIALIZÁLÁS SIKERES! ---");
         }
     }
 }

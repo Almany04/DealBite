@@ -1,9 +1,13 @@
 ﻿using DealBite.Domain.Entities;
+using DealBite.Domain.ValueObjects;
 using DealBite.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Emit;
 using System.Text;
 
 namespace DealBite.Infrastructure.Persistence
@@ -31,10 +35,26 @@ namespace DealBite.Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            var geoConverter = new ValueConverter<GeoCoordinate, Point>(
+                v => new Point(v.Longitude, v.Latitude) { SRID = 4326 }, 
+                v => new GeoCoordinate(v.Y, v.X)                         
+            );
+
+            builder.Entity<StoreLocation>(entity =>
+            {
+                entity.Property(e => e.Coordinates)
+                      .HasConversion(geoConverter)          
+                      .HasColumnType("geography(Point, 4326)") 
+                      .IsRequired();                        
+            });
+
+            
+
             builder.HasPostgresExtension("postgis");
             builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         }
 
-        
+
     }
 }
