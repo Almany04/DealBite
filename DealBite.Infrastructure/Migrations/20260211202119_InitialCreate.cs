@@ -24,10 +24,9 @@ namespace DealBite.Infrastructure.Migrations
                     Email = table.Column<string>(type: "text", nullable: false),
                     DisplayName = table.Column<string>(type: "text", nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: true),
+                    DefaultLocation = table.Column<Point>(type: "geography(Point, 4326)", nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    LastLoginAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Latitude = table.Column<double>(type: "double precision", nullable: true),
-                    Longitude = table.Column<double>(type: "double precision", nullable: true)
+                    LastLoginAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -114,7 +113,7 @@ namespace DealBite.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    storeSlug = table.Column<int>(type: "integer", nullable: false),
+                    StoreSlug = table.Column<int>(type: "integer", nullable: false),
                     BrandColor = table.Column<string>(type: "text", nullable: true),
                     LogoUrl = table.Column<string>(type: "text", nullable: true),
                     WebsiteUrl = table.Column<string>(type: "text", nullable: true),
@@ -264,6 +263,7 @@ namespace DealBite.Infrastructure.Migrations
                     NormalizedName = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
                     AiGeneratedImageUrl = table.Column<string>(type: "text", nullable: true),
+                    Quantity = table.Column<double>(type: "double precision", nullable: false),
                     UnitType = table.Column<int>(type: "integer", nullable: false),
                     IsIngredient = table.Column<bool>(type: "boolean", nullable: false),
                     CategoryId = table.Column<Guid>(type: "uuid", nullable: false)

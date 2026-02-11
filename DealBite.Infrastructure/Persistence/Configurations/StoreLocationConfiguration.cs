@@ -11,13 +11,8 @@ namespace DealBite.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<StoreLocation> builder)
         {
             builder.Property(x => x.Coordinates)
-            .HasConversion(
-                // C# -> DB: GeoCoordinate-ből Point lesz
-                c => new Point(c.Longitude, c.Latitude) { SRID = 4326 },
-                // DB -> C#: Point-ból GeoCoordinate lesz
-                p => new GeoCoordinate(p.Y, p.X)
-            )
-            .HasColumnType("geography(Point, 4326)");
+                    .HasColumnType("geography(Point, 4326)")
+                    .IsRequired();
         }
     }
 }

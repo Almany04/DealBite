@@ -1,5 +1,7 @@
-﻿using DealBite.Infrastructure.Identity;
+﻿using DealBite.Application.Interfaces.Repositories;
+using DealBite.Infrastructure.Identity;
 using DealBite.Infrastructure.Persistence;
+using DealBite.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +36,9 @@ namespace DealBite.Infrastructure
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+            services.AddScoped<IProductRepository, ProductRepository>(); 
+            services.AddScoped<IStoreRepository, StoreRepository>();
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
             return services;
         }

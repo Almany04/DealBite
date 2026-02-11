@@ -12,9 +12,11 @@ namespace DealBite.Domain.Entities
         public required string NormalizedName { get; set; }
         public string? Description { get; set; }
         public string? AiGeneratedImageUrl { get; set; }
+        public double Quantity { get; set; }
         public ProductUnit UnitType { get; set; }
         public bool IsIngredient { get; set; }
         public Guid CategoryId { get; set; }
         public Category? Category { get; set; }
+        public ICollection<ProductPrice> Prices { get; set; } = new List<ProductPrice>();
     }
 }

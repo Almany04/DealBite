@@ -33,6 +33,9 @@ namespace DealBite.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Point>("DefaultLocation")
+                        .HasColumnType("geography(Point, 4326)");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -46,17 +49,6 @@ namespace DealBite.Infrastructure.Migrations
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
-
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "DefaultLocation", "DealBite.Domain.Entities.AppUser.DefaultLocation#GeoCoordinate", b1 =>
-                        {
-                            b1.Property<double>("Latitude")
-                                .HasColumnType("double precision")
-                                .HasColumnName("Latitude");
-
-                            b1.Property<double>("Longitude")
-                                .HasColumnType("double precision")
-                                .HasColumnName("Longitude");
-                        });
 
                     b.HasKey("Id");
 
@@ -155,6 +147,9 @@ namespace DealBite.Infrastructure.Migrations
                     b.Property<string>("NormalizedName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<double>("Quantity")
+                        .HasColumnType("double precision");
 
                     b.Property<int>("UnitType")
                         .HasColumnType("integer");
@@ -416,11 +411,11 @@ namespace DealBite.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("StoreSlug")
+                        .HasColumnType("integer");
+
                     b.Property<string>("WebsiteUrl")
                         .HasColumnType("text");
-
-                    b.Property<int>("storeSlug")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -695,7 +690,7 @@ namespace DealBite.Infrastructure.Migrations
             modelBuilder.Entity("DealBite.Domain.Entities.ProductPrice", b =>
                 {
                     b.HasOne("DealBite.Domain.Entities.Product", "Product")
-                        .WithMany()
+                        .WithMany("Prices")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -834,6 +829,11 @@ namespace DealBite.Infrastructure.Migrations
             modelBuilder.Entity("DealBite.Domain.Entities.Category", b =>
                 {
                     b.Navigation("SubCategories");
+                });
+
+            modelBuilder.Entity("DealBite.Domain.Entities.Product", b =>
+                {
+                    b.Navigation("Prices");
                 });
 
             modelBuilder.Entity("DealBite.Domain.Entities.Recipe", b =>
