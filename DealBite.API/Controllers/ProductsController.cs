@@ -1,6 +1,8 @@
 ﻿using DealBite.Application.Common.Models;
 using DealBite.Application.DTOs;
 using DealBite.Application.Features.Products.Queries.GetAllProducts;
+using DealBite.Application.Features.Products.Queries.GetOnSaleProducts;
+using DealBite.Application.Features.Products.Queries.GetPriceHistory;
 using DealBite.Application.Features.Products.Queries.GetProductById;
 using DealBite.Application.Features.Products.Queries.GetProductsByCategory;
 using DealBite.Application.Features.Products.Queries.SearchProducts;
@@ -83,6 +85,34 @@ namespace DealBite.API.Controllers
             {
                 return NotFound();
             }
+        }
+        [HttpGet("on-sale")]
+        public async Task<ActionResult<PaginatedResult<ProductDto>>> OnSale(
+            [FromQuery] string? query,
+            [FromQuery] Guid? categoryId,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var searchQuery = new GetOnSaleProductsQuery
+            {
+                SearchText = query,
+                CategoryId = categoryId,
+                PageNumber = page,
+                PageSize = pageSize
+            };
+
+            var result = await _mediator.Send(searchQuery);
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/price-history")]
+        public async Task<ActionResult<List<PriceHistoryDto>>> GetPriceHistory(Guid id)
+        {
+            
+                var query = new GetPriceHistoryQuery { ProductId = id };
+                var result = await _mediator.Send(query);
+                return Ok(result);
+         
         }
     }
 }
