@@ -23,11 +23,80 @@ namespace DealBite.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Product?> GetByIdWithDetailsAsync(Guid Id)
+        {
+            return await _context.Products
+                 .AsNoTracking()
+                 .Include(p => p.Category)
+                 .Include(p => p.Prices)
+                 .ThenInclude(pp => pp.Store)
+                 .FirstOrDefaultAsync(p => p.Id == Id);
+        }
+
+        public async Task<(IEnumerable<Product> Items, int TotalCount)> GetOnSaleAsync(string? searchText, Guid? categoryId, int page, int pageSize)
+        {
+            var query = _context.Products.AsNoTracking().AsQueryable();
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                query = query.Where(p => EF.Functions.ILike(p.NormalizedName, $"%{searchText}%"));
+            }
+            if (categoryId.HasValue)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            query = query.Where(p => p.Prices.Any(price =>
+            price.IsOnSale == true &&
+            price.ValidFrom <= today &&
+            price.ValidTo >= today
+            ));
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Include(p => p.Category)
+                .Include(p => p.Prices).ThenInclude(pp => pp.Store)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+
         public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(Guid categoryId)
         {
             return await _context.Products
                 .Where(p => p.CategoryId == categoryId)
                 .ToListAsync();
+        }
+
+        public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(string? searchText, Guid? categoryId, int page, int pageSize)
+        {
+            var query = _context.Products.AsNoTracking().AsQueryable();
+            
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                query = query.Where(p => EF.Functions.ILike(p.NormalizedName, $"%{searchText}%"));
+            }
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Include(p => p.Category)
+                .Include(p => p.Prices).ThenInclude(pp => pp.Store)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
     }
 }

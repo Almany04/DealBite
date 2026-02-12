@@ -38,6 +38,8 @@ namespace DealBite.Infrastructure
             .AddDefaultTokenProviders();
             services.AddScoped<IProductRepository, ProductRepository>(); 
             services.AddScoped<IStoreRepository, StoreRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IPriceHistoryRepository, PriceHistoryRepository>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
             return services;
