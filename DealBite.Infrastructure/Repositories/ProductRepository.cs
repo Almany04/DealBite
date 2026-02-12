@@ -39,5 +39,27 @@ namespace DealBite.Infrastructure.Repositories
                 .Where(p => p.CategoryId == categoryId)
                 .ToListAsync();
         }
+
+        public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(string? searchText, Guid? categoryId, int page, int pageSize)
+        {
+            var query = _context.Products.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                query = query.Where(p => EF.Functions.ILike(p.NormalizedName, $"%{searchText}%"));
+            }
+            if (categoryId.HasValue)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Include(p => p.Category)
+                .Include(p => p.Prices).ThenInclude(pp => pp.Store)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
     }
 }
