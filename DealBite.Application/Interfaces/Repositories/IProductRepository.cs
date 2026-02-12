@@ -9,5 +9,6 @@ namespace DealBite.Application.Interfaces.Repositories
     {
         Task<IEnumerable<Product>> GetProductsByCategoryAsync(Guid categoryId);
         Task<IEnumerable<Product>> GetAllWithDetailsAsync();
+        Task<IEnumerable<Product>> GetByIdWithDetailsAsync(Guid productId);
     }
 }
