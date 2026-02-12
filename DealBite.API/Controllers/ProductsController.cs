@@ -2,6 +2,7 @@
 using DealBite.Application.DTOs;
 using DealBite.Application.Features.Products.Queries.GetAllProducts;
 using DealBite.Application.Features.Products.Queries.GetProductById;
+using DealBite.Application.Features.Products.Queries.GetProductsByCategory;
 using DealBite.Application.Features.Products.Queries.SearchProducts;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -59,6 +60,29 @@ namespace DealBite.API.Controllers
 
             var result = await _mediator.Send(searchQuery);
             return Ok(result);
+        }
+        [HttpGet("category/{slug}")]
+        public async Task<ActionResult<PaginatedResult<ProductDto>>> GetByCategory(
+            string slug,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var query = new GetProductsByCategoryQuery
+                {
+                    Slug=slug,
+                    PageNumber=page,
+                    PageSize=pageSize
+                };
+
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }
