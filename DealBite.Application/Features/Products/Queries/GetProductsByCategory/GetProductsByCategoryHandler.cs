@@ -9,6 +9,13 @@ using System.Text;
 
 namespace DealBite.Application.Features.Products.Queries.GetProductsByCategory
 {
+    public class GetProductsByCategoryQuery : IRequest<PaginatedResult<ProductDto>>
+    {
+        public string Slug { get; set; } = string.Empty;
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+
+    }
     public class GetProductsByCategoryHandler : IRequestHandler<GetProductsByCategoryQuery, PaginatedResult<ProductDto>>
     {
         private ICategoryRepository _categoryRepository;
