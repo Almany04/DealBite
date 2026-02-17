@@ -9,6 +9,13 @@ using System.Text;
 
 namespace DealBite.Application.Features.Products.Queries.GetOnSaleProducts
 {
+    public class GetOnSaleProductsQuery : IRequest<PaginatedResult<ProductDto>>
+    {
+        public string? SearchText { get; set; }
+        public Guid? CategoryId { get; set; }
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+    }
     public class GetOnSaleProductsHandler : IRequestHandler<GetOnSaleProductsQuery, PaginatedResult<ProductDto>>
     {
         private readonly IProductRepository _repository;

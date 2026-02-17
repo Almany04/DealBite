@@ -6,6 +6,10 @@ using MediatR;
 
 namespace DealBite.Application.Features.Products.Queries.GetPriceHistory
 {
+    public class GetPriceHistoryQuery : IRequest<List<PriceHistoryDto>>
+    {
+        public Guid ProductId { get; set; }
+    }
     public class GetPriceHistoryHandler : IRequestHandler<GetPriceHistoryQuery, List<PriceHistoryDto>>
     {
         private readonly IPriceHistoryRepository _priceHistory;

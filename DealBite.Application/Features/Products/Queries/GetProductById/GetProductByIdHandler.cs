@@ -6,6 +6,10 @@ using MediatR;
 
 namespace DealBite.Application.Features.Products.Queries.GetProductById
 {
+    public class GetProductByIdQuery : IRequest<ProductDto>
+    {
+        public Guid Id { get; init; }
+    }
     public class GetProductByIdHandler: IRequestHandler<GetProductByIdQuery, ProductDto>
     {
         private readonly IProductRepository _repository;
