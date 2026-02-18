@@ -1,10 +1,11 @@
 ﻿using DealBite.Application.Interfaces.Repositories;
 using DealBite.Domain.Entities;
 using DealBite.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace DealBite.Infrastructure.Repositories
 {
@@ -32,6 +33,27 @@ namespace DealBite.Infrastructure.Repositories
                  .Include(p => p.Prices)
                  .ThenInclude(pp => pp.Store)
                  .FirstOrDefaultAsync(p => p.Id == Id);
+        }
+
+        public async Task<List<Product>> GetByStoreIdAsync(Guid storeId, bool onlyActive = false)
+        {
+            var query = _context.Products.AsNoTracking().AsQueryable();
+
+            query = query.Where(p => p.Prices.Any(price => price.StoreId == storeId));
+
+            if (onlyActive)
+            {
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                query = query.Where(p => p.Prices.Any(price =>
+                    price.StoreId == storeId &&
+                    price.ValidTo >= today));
+            }
+
+            return await query
+                .Include(p => p.Category)
+                .Include(p => p.Prices)
+                .ThenInclude(pp => pp.Store)
+                .ToListAsync();
         }
 
         public async Task<(IEnumerable<Product> Items, int TotalCount)> GetOnSaleAsync(string? searchText, Guid? categoryId, int page, int pageSize)

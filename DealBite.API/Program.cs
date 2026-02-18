@@ -29,17 +29,7 @@ app.UseAuthorization();
 app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    try
-    {
-        
-        await DealBite.Infrastructure.Persistence.DbInitializer.InitializeAsync(services);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Hiba történt az adatbázis feltöltése közben.");
-    }
+    await DealBite.Infrastructure.Persistence.DbInitializer.InitializeAsync(scope.ServiceProvider);
 }
 
 app.Run();

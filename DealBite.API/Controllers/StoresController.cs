@@ -1,10 +1,11 @@
-﻿using DealBite.Application.DTOs;
+﻿using DealBite.Application.Common.Models;
+using DealBite.Application.DTOs;
+using DealBite.Application.Features.Products.Queries.GetByStoreId;
+using DealBite.Application.Features.Products.Queries.GetProductsByCategory;
 using DealBite.Application.Features.Stores.Queries.GetAllStores;
 using DealBite.Application.Features.Stores.Queries.GetNearbyStores;
 using DealBite.Application.Features.Stores.Queries.GetStoreById;
 using MediatR;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DealBite.API.Controllers
@@ -40,7 +41,7 @@ namespace DealBite.API.Controllers
         [HttpGet]
         public async Task<ActionResult<List<StoreDto>>> GetAll()
         {
-            var result = _mediator.Send(new GetAllStoresQuery());
+            var result = await _mediator.Send(new GetAllStoresQuery());
             return Ok(result);
         }
 
@@ -57,6 +58,14 @@ namespace DealBite.API.Controllers
             {
                 return NotFound();
             }
+        }
+        [HttpGet("{id}/products")]
+        public async Task<ActionResult<List<ProductDto>>> GetByStoreId(Guid id, bool OnlyActive=false)
+        {
+
+            var query = new GetByStoreIdQuery { StoreId = id, OnlyActive = OnlyActive};
+            var result = await _mediator.Send(query);
+            return Ok(result);
         }
     }
 }
