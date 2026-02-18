@@ -12,10 +12,12 @@ namespace DealBite.Infrastructure.Persistence.Configurations
         public void Configure(EntityTypeBuilder<AppUser> builder)
         {
             builder.Property(u => u.Id).ValueGeneratedNever();
-
             
             builder.Property(x => x.DefaultLocation)
                    .HasColumnType("geography(Point, 4326)");
+
+            builder.HasIndex(u => u.IdentityUserId)
+                .IsUnique();
         }
     }
 }

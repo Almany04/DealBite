@@ -1,7 +1,10 @@
-﻿using DealBite.Application.Interfaces.Repositories;
+﻿using DealBite.Application.Auth;
+using DealBite.Application.Auth.Interfaces;
+using DealBite.Application.Interfaces.Repositories;
 using DealBite.Infrastructure.Identity;
 using DealBite.Infrastructure.Persistence;
 using DealBite.Infrastructure.Repositories;
+using DealBite.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -36,10 +39,14 @@ namespace DealBite.Infrastructure
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+            services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
             services.AddScoped<IProductRepository, ProductRepository>(); 
             services.AddScoped<IStoreRepository, StoreRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IAppUserRepository, AppUserRepository>();
             services.AddScoped<IPriceHistoryRepository, PriceHistoryRepository>();
+            services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
             return services;

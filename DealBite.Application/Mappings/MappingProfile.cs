@@ -34,6 +34,10 @@ namespace DealBite.Application.Mappings
             CreateMap<PriceHistory, PriceHistoryDto>()
                 .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price.Amount))
                 .ForMember(dest => dest.StoreName, opt => opt.MapFrom(src => src.Store != null ? src.Store.Name:"Ismeretlen"));
+
+            CreateMap<Store, StoreDto>();
+            CreateMap<Category, CategoryDto>();
+                
         }
     }
     

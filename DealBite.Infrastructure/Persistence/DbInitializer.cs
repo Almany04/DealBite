@@ -1,11 +1,9 @@
 ﻿using DealBite.Domain.Entities;
 using DealBite.Domain.Enums;
-using DealBite.Domain.ValueObjects; // A Money miatt ez marad!
+using DealBite.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using NetTopologySuite.Geometries; // <--- EZT ADTAM HOZZÁ a Point miatt
-using System;
-using System.Threading.Tasks;
+using NetTopologySuite.Geometries;
 
 namespace DealBite.Infrastructure.Persistence
 {
@@ -13,22 +11,15 @@ namespace DealBite.Infrastructure.Persistence
     {
         public static async Task InitializeAsync(IServiceProvider serviceProvider)
         {
-            // Scope létrehozása, hogy biztosan megkapjuk a Contextet
-            using var scope = serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
 
             Console.WriteLine("--- ADATBÁZIS INITIALIZÁLÁS INDUL ---");
 
-            // Migrációk automatikus futtatása induláskor
             await context.Database.MigrateAsync();
 
-            // Ha már vannak boltok, nem futtatjuk újra a seed-et (opcionális biztonsági ellenőrzés)
-            // De mivel a te kódodban törlés van, ezt most kihagyom, hogy mindig újrahúzza a tesztadatokat.
-
-            // 1. TAKARÍTÁS (Sorrend fontos a foreign key-ek miatt!)
+            // 1. TAKARÍTÁS
             Console.WriteLine(">>> RÉGI ADATOK TÖRLÉSE... <<<");
 
-            // Törlés hatékonyabban:
             if (context.ProductPrices.Any()) context.ProductPrices.RemoveRange(context.ProductPrices);
             if (context.ShoppingListItems.Any()) context.ShoppingListItems.RemoveRange(context.ShoppingListItems);
             if (context.ShoppingLists.Any()) context.ShoppingLists.RemoveRange(context.ShoppingLists);
@@ -44,11 +35,14 @@ namespace DealBite.Infrastructure.Persistence
 
             // 2. KATEGÓRIÁK
             Console.WriteLine(">>> KATEGÓRIÁK LÉTREHOZÁSA... <<<");
+
             var catDairy = new Category { Name = "Tejtermékek", Slug = "tejtermekek" };
             var catBakery = new Category { Name = "Pékáru", Slug = "pekaru" };
             var catMeat = new Category { Name = "Húsok", Slug = "husok" };
+            var catDairyYogurt = new Category { Name = "Joghurtok", Slug = "joghurtok", ParentCategory = catDairy };
+            var catDairyCheese = new Category { Name = "Sajtok", Slug = "sajtok", ParentCategory = catDairy };
 
-            await context.Categories.AddRangeAsync(catDairy, catBakery, catMeat);
+            await context.Categories.AddRangeAsync(catDairy, catBakery, catMeat, catDairyYogurt, catDairyCheese);
             await context.SaveChangesAsync();
 
             // 3. BOLTOK ÉS HELYSZÍNEK
@@ -57,24 +51,19 @@ namespace DealBite.Infrastructure.Persistence
             var lidl = new Store
             {
                 Name = "Lidl",
-                StoreSlug = StoreSlug.Lidl, // Figyelj a kisbetűs/nagybetűs property névre a Store entitásban!
+                StoreSlug = StoreSlug.Lidl,
                 BrandColor = "#0050AA",
                 LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/9/91/Lidl-Logo.svg",
                 IsActive = true,
                 WebsiteUrl = "https://www.lidl.hu"
             };
-
-            // JAVÍTVA: Point használata GeoCoordinate helyett
-            // FONTOS: (Longitude, Latitude) sorrend! (Keleti hosszúság, Északi szélesség)
             lidl.Locations.Add(new StoreLocation
             {
                 Address = "Király u. 112.",
                 City = "Budapest",
                 ZipCode = "1068",
-                // Budapest: X=19.0683 (Lon), Y=47.5069 (Lat)
                 Coordinates = new Point(19.0683, 47.5069) { SRID = 4326 }
             });
-
             lidl.Locations.Add(new StoreLocation
             {
                 Address = "Csalogány u. 43.",
@@ -92,7 +81,6 @@ namespace DealBite.Infrastructure.Persistence
                 IsActive = true,
                 WebsiteUrl = "https://www.spar.hu"
             };
-
             spar.Locations.Add(new StoreLocation
             {
                 Address = "Batthyány tér 5-6.",
@@ -101,63 +89,133 @@ namespace DealBite.Infrastructure.Persistence
                 Coordinates = new Point(19.0384, 47.5055) { SRID = 4326 }
             });
 
-            await context.Stores.AddRangeAsync(lidl, spar);
+            var aldi = new Store
+            {
+                Name = "Aldi",
+                StoreSlug = StoreSlug.Aldi,
+                BrandColor = "#00005F",
+                LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Aldi_Nord_2017.svg/800px-Aldi_Nord_2017.svg.png",
+                IsActive = true,
+                WebsiteUrl = "https://www.aldi.hu"
+            };
+            aldi.Locations.Add(new StoreLocation
+            {
+                Address = "Váci út 15.",
+                City = "Budapest",
+                ZipCode = "1134",
+                Coordinates = new Point(19.0571, 47.5189) { SRID = 4326 }
+            });
+
+            await context.Stores.AddRangeAsync(lidl, spar, aldi);
             await context.SaveChangesAsync();
 
             // 4. TERMÉKEK
             Console.WriteLine(">>> TERMÉKEK LÉTREHOZÁSA... <<<");
+
             var milk = new Product
             {
                 Name = "Pilos Tej 2,8%",
                 NormalizedName = "pilos tej 2,8%",
-                // Quantity = 1, // Ha nincs ilyen property a Product entitásban, vedd ki!
+                Quantity = 1,
                 UnitType = ProductUnit.L,
-                AiGeneratedImageUrl = "https://example.com/milk.jpg",
                 IsIngredient = true,
-                CategoryId = catDairy.Id,
-                Category = catDairy
+                CategoryId = catDairy.Id
+            };
+            var butter = new Product
+            {
+                Name = "Rama Margarin",
+                NormalizedName = "rama margarin",
+                Quantity = 250,
+                UnitType = ProductUnit.g,
+                IsIngredient = true,
+                CategoryId = catDairy.Id
+            };
+            var yogurt = new Product
+            {
+                Name = "Danone Joghurt Eper",
+                NormalizedName = "danone joghurt eper",
+                Quantity = 125,
+                UnitType = ProductUnit.g,
+                IsIngredient = false,
+                CategoryId = catDairyYogurt.Id
+            };
+            var cheese = new Product
+            {
+                Name = "Trappista Sajt",
+                NormalizedName = "trappista sajt",
+                Quantity = 1,
+                UnitType = ProductUnit.Kg,
+                IsIngredient = true,
+                CategoryId = catDairyCheese.Id
+            };
+            var bread = new Product
+            {
+                Name = "Félbarna Kenyér",
+                NormalizedName = "felbarna kenyer",
+                Quantity = 500,
+                UnitType = ProductUnit.g,
+                IsIngredient = false,
+                CategoryId = catBakery.Id
+            };
+            var chicken = new Product
+            {
+                Name = "Csirkemell Filé",
+                NormalizedName = "csirkemell file",
+                Quantity = 1,
+                UnitType = ProductUnit.Kg,
+                IsIngredient = true,
+                CategoryId = catMeat.Id
             };
 
-            await context.Products.AddAsync(milk);
+            await context.Products.AddRangeAsync(milk, butter, yogurt, cheese, bread, chicken);
             await context.SaveChangesAsync();
 
             // 5. ÁRAK
             Console.WriteLine(">>> ÁRAK HOZZÁRENDELÉSE... <<<");
 
-            // Megjegyzés: A ProductPrice entitásodban a Price ComplexType (Money).
-            // Az "Amount" és "Currency" property-ket az EF Core mappolja be a Money struct-ból.
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var in14Days = today.AddDays(14);
+            var yesterday = today.AddDays(-1);
 
-            var milkPriceLidl = new ProductPrice
-            {
-                ProductId = milk.Id,
-                Product = milk,
-                StoreId = lidl.Id,
-                Store = lidl,
-                Price = new Money(299, "HUF"),
-                Source = PriceSource.Manual,
-                LastScrapedAt = DateTimeOffset.UtcNow,
-                ValidFrom = DateOnly.FromDateTime(DateTime.Now),
-                ValidTo = DateOnly.FromDateTime(DateTime.Now.AddDays(14)),
-                IsOnSale = false,
-                UnitPriceAmount = 299
-            };
+            await context.ProductPrices.AddRangeAsync(
+                // TEJ - mindhárom boltban, Lidl-ben akciós
+                new ProductPrice { ProductId = milk.Id, StoreId = lidl.Id, Price = new Money(249, "HUF"), OriginalPrice = new Money(299, "HUF"), IsOnSale = true, DiscountPercent = 17, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow, UnitPriceAmount = 249 },
+                new ProductPrice { ProductId = milk.Id, StoreId = spar.Id, Price = new Money(349, "HUF"), IsOnSale = false, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow, UnitPriceAmount = 349 },
+                new ProductPrice { ProductId = milk.Id, StoreId = aldi.Id, Price = new Money(269, "HUF"), IsOnSale = false, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow, UnitPriceAmount = 269 },
 
-            var milkPriceSpar = new ProductPrice
-            {
-                ProductId = milk.Id,
-                Product = milk,
-                StoreId = spar.Id,
-                Store = spar,
-                Price = new Money(349, "HUF"),
-                Source = PriceSource.Manual,
-                LastScrapedAt = DateTimeOffset.UtcNow,
-                ValidFrom = DateOnly.FromDateTime(DateTime.Now),
-                ValidTo = DateOnly.FromDateTime(DateTime.Now.AddDays(14)),
-                IsOnSale = false,
-                UnitPriceAmount = 349
-            };
+                // MARGARIN - két boltban, Spar-ban akciós
+                new ProductPrice { ProductId = butter.Id, StoreId = lidl.Id, Price = new Money(399, "HUF"), IsOnSale = false, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow },
+                new ProductPrice { ProductId = butter.Id, StoreId = spar.Id, Price = new Money(449, "HUF"), OriginalPrice = new Money(499, "HUF"), IsOnSale = true, DiscountPercent = 10, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow },
 
-            await context.ProductPrices.AddRangeAsync(milkPriceLidl, milkPriceSpar);
+                // JOGHURT - Lidl-ben LEJÁRT akció (ValidTo = yesterday), Aldi-ban aktív
+                // Ez teszteli az onlyActive=true szűrést!
+                new ProductPrice { ProductId = yogurt.Id, StoreId = lidl.Id, Price = new Money(199, "HUF"), OriginalPrice = new Money(249, "HUF"), IsOnSale = true, DiscountPercent = 20, Source = PriceSource.Manual, ValidFrom = today.AddDays(-14), ValidTo = yesterday, LastScrapedAt = DateTimeOffset.UtcNow },
+                new ProductPrice { ProductId = yogurt.Id, StoreId = aldi.Id, Price = new Money(219, "HUF"), IsOnSale = false, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow },
+
+                // SAJT - Spar és Aldi, Aldi-ban akciós
+                new ProductPrice { ProductId = cheese.Id, StoreId = spar.Id, Price = new Money(2490, "HUF"), IsOnSale = false, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow },
+                new ProductPrice { ProductId = cheese.Id, StoreId = aldi.Id, Price = new Money(1990, "HUF"), OriginalPrice = new Money(2490, "HUF"), IsOnSale = true, DiscountPercent = 20, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow },
+
+                // KENYÉR - Lidl és Spar
+                new ProductPrice { ProductId = bread.Id, StoreId = lidl.Id, Price = new Money(299, "HUF"), IsOnSale = false, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow },
+                new ProductPrice { ProductId = bread.Id, StoreId = spar.Id, Price = new Money(349, "HUF"), IsOnSale = false, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow },
+
+                // CSIRKEMELL - Aldi és Lidl-ben akciós
+                new ProductPrice { ProductId = chicken.Id, StoreId = aldi.Id, Price = new Money(1799, "HUF"), IsOnSale = false, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow },
+                new ProductPrice { ProductId = chicken.Id, StoreId = lidl.Id, Price = new Money(1599, "HUF"), OriginalPrice = new Money(1999, "HUF"), IsOnSale = true, DiscountPercent = 20, Source = PriceSource.Manual, ValidFrom = today, ValidTo = in14Days, LastScrapedAt = DateTimeOffset.UtcNow }
+            );
+            await context.SaveChangesAsync();
+
+            // 6. ÁRTÖRTÉNET - néhány historikus adat
+            Console.WriteLine(">>> ÁRTÖRTÉNET LÉTREHOZÁSA... <<<");
+
+            await context.PriceHistories.AddRangeAsync(
+                new PriceHistory { ProductId = milk.Id, StoreId = lidl.Id, Price = new Money(319, "HUF"), RecordedAt = DateTimeOffset.UtcNow.AddMonths(-2) },
+                new PriceHistory { ProductId = milk.Id, StoreId = lidl.Id, Price = new Money(299, "HUF"), RecordedAt = DateTimeOffset.UtcNow.AddMonths(-1) },
+                new PriceHistory { ProductId = milk.Id, StoreId = lidl.Id, Price = new Money(249, "HUF"), RecordedAt = DateTimeOffset.UtcNow },
+                new PriceHistory { ProductId = chicken.Id, StoreId = lidl.Id, Price = new Money(1999, "HUF"), RecordedAt = DateTimeOffset.UtcNow.AddMonths(-1) },
+                new PriceHistory { ProductId = chicken.Id, StoreId = lidl.Id, Price = new Money(1599, "HUF"), RecordedAt = DateTimeOffset.UtcNow }
+            );
             await context.SaveChangesAsync();
 
             Console.WriteLine("--- ADATBÁZIS INITIALIZÁLÁS SIKERES! ---");

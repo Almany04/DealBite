@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DealBite.Application.DTOs;
 using DealBite.Application.Interfaces.Repositories;
+using DealBite.Domain.Entities;
 using MediatR;
 
 
@@ -24,6 +25,10 @@ namespace DealBite.Application.Features.Products.Queries.GetPriceHistory
         public async Task<List<PriceHistoryDto>> Handle(GetPriceHistoryQuery request, CancellationToken cancellationToken)
         {
             var history = await _priceHistory.GetByProductIdAsync(request.ProductId);
+            if (history == null)
+            {
+                throw new KeyNotFoundException($"Nem található termék ezzel az azonosítóval: {request.ProductId}");
+            }
 
             return _mapper.Map<List<PriceHistoryDto>>(history);
         }

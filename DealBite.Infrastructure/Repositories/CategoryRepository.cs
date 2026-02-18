@@ -12,6 +12,15 @@ namespace DealBite.Infrastructure.Repositories
         {
         }
 
+        public async Task<List<Category>> GetAllWithSubCategoriesAsync()
+        {
+            return await _context.Categories
+                .AsNoTracking()
+                .Where(c => c.ParentCategoryId==null)
+                .Include(c => c.SubCategories)
+                .ToListAsync();
+        }
+
         public async Task<Category?> GetBySlugAsync(string slug)
         {
             return await _context.Categories.
