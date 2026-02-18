@@ -7,6 +7,8 @@ namespace DealBite.Application.Interfaces.Repositories
 {
     public interface IStoreRepository:IGenericRepository<Store>
     {
-        Task<IEnumerable<StoreLocation>> GetNearbyLocationsAsync(double latitude, double longitude, double radiusInMeters); 
+        Task<IEnumerable<StoreLocation>> GetNearbyLocationsAsync(double latitude, double longitude, double radiusInMeters);
+        Task<Store?> GetByIdWithLocationsAsync(Guid storeId);
+        Task<List<Store>> GetAllWithLocationsAsync();
     }
 }

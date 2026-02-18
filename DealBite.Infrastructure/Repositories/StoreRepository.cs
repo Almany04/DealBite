@@ -15,6 +15,21 @@ namespace DealBite.Infrastructure.Repositories
         {
         }
 
+        public async Task<Store?> GetByIdWithLocationsAsync(Guid storeId)
+        {
+            return await _context.Stores
+                 .AsNoTracking()
+                 .Include(sl => sl.Locations)
+                 .FirstOrDefaultAsync(s => s.Id == storeId);
+        }
+        public async Task<List<Store>> GetAllWithLocationsAsync()
+        {
+            return await _context.Stores
+                .AsNoTracking()
+                .Include(sl => sl.Locations)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<StoreLocation>> GetNearbyLocationsAsync(double latitude, double longitude, double radiusInMeters)
         {
             var userLocation = new Point(longitude, latitude) { SRID = 4326 };

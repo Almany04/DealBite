@@ -8,6 +8,9 @@ using System.Text;
 
 namespace DealBite.Application.Features.Products.Queries.GetAllProducts
 {
+    public class GetAllProductsQuery : IRequest<List<ProductDto>>
+    {
+    }
     public class GetAllProductsHandler : IRequestHandler<GetAllProductsQuery, List<ProductDto>>
     {
         private readonly IProductRepository _repository; 
