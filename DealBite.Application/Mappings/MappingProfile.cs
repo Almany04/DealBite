@@ -37,7 +37,11 @@ namespace DealBite.Application.Mappings
 
             CreateMap<Store, StoreDto>();
             CreateMap<Category, CategoryDto>();
-                
+            CreateMap<ShoppingList, ShoppingListDto>()
+             .ForMember(dest => dest.TotalEstimatedPrice, opt => opt.MapFrom(src => src.TotalEstimatedPrice.Amount))
+             .ForMember(dest => dest.TotalSaved, opt => opt.MapFrom(src => src.TotalSaved.Amount));
+            CreateMap<ShoppingListItem, ShoppingListItemDto>()
+            .ForMember(dest => dest.EstimatedPrice, opt => opt.MapFrom(src => src.EstimatedPrice.Amount));
         }
     }
     

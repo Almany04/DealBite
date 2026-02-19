@@ -44,6 +44,7 @@ namespace DealBite.Infrastructure
             services.AddScoped<IStoreRepository, StoreRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IAppUserRepository, AppUserRepository>();
+            services.AddScoped<IShoppingListRepository, ShoppingListRepository>();
             services.AddScoped<IPriceHistoryRepository, PriceHistoryRepository>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
