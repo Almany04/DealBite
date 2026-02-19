@@ -14,6 +14,7 @@ namespace DealBite.Domain.Entities
         public string? AiGeneratedImageUrl { get; set; }
         public double Quantity { get; set; }
         public ProductUnit UnitType { get; set; }
+        public ProductSegment Segment { get; set; }
         public bool IsIngredient { get; set; }
         public Guid CategoryId { get; set; }
         public Category? Category { get; set; }
