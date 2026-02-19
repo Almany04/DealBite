@@ -17,6 +17,8 @@ namespace DealBite.Domain.Entities
         public DateOnly ValidFrom {  get; set; }
         public DateOnly ValidTo { get; set; }
         public PriceSource Source { get; set; }
+        public PromotionType PromotionType { get; set; }
+        public string? AppRequired { get; set; }
         public DateTimeOffset LastScrapedAt { get; set; }
         public Guid ProductId { get; set; }
         public Product? Product { get; set; }
