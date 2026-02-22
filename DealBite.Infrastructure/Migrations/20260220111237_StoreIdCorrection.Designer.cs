@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using DealBite.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DealBite.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260220111237_StoreIdCorrection")]
+    partial class StoreIdCorrection
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -372,7 +375,7 @@ namespace DealBite.Infrastructure.Migrations
                     b.Property<double>("Quantity")
                         .HasColumnType("double precision");
 
-                    b.Property<Guid>("ShoppingListId")
+                    b.Property<Guid?>("ShoppingListId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("StoreId")
@@ -757,19 +760,15 @@ namespace DealBite.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DealBite.Domain.Entities.ShoppingList", "ShoppingList")
+                    b.HasOne("DealBite.Domain.Entities.ShoppingList", null)
                         .WithMany("ShoppingListItems")
-                        .HasForeignKey("ShoppingListId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ShoppingListId");
 
                     b.HasOne("DealBite.Domain.Entities.Store", "Store")
                         .WithMany()
                         .HasForeignKey("StoreId");
 
                     b.Navigation("Product");
-
-                    b.Navigation("ShoppingList");
 
                     b.Navigation("Store");
                 });

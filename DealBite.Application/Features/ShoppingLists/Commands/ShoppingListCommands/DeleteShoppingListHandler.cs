@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DealBite.Application.Features.ShoppingLists.Commands
+namespace DealBite.Application.Features.ShoppingLists.Commands.ShoppingListCommands
 {
     public class DeleteShoppingListCommand : IRequest<Unit>
     {

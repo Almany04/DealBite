@@ -13,5 +13,8 @@
   <ItemGroup>
     <ProjectReference Include="..\DealBite.Domain\DealBite.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Features\Products\Commands\" />
+  </ItemGroup>
 
 </Project>

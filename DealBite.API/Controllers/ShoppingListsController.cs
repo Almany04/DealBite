@@ -1,10 +1,12 @@
 ﻿using DealBite.Application.DTOs;
-using DealBite.Application.Features.ShoppingLists.Commands;
+using DealBite.Application.Features.ShoppingLists.Commands.ShoppingListCommands;
+using DealBite.Application.Features.ShoppingLists.Commands.ShoppingListItemCommands;
 using DealBite.Application.Features.ShoppingLists.Queries.GetShoppingListById;
 using DealBite.Application.Features.ShoppingLists.Queries.GetUserShoppingLists;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -91,6 +93,53 @@ namespace DealBite.API.Controllers
         public async Task<ActionResult> Delete(Guid id)
         {
             var command = new DeleteShoppingListCommand { Id = id};
+
+            try
+            {
+                await _mediator.Send(command);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+
+        }
+        public record CreateListItemRequest(Guid ProductId, double Quantity);
+        [HttpPost("{ShoppingListId}/items")]
+        public async Task<ActionResult<Guid>> CreateItem(Guid ShoppingListId,[FromBody] CreateListItemRequest request)
+        { 
+            var command = new AddShoppingListItemCommand
+            {
+                Quantity=request.Quantity,
+                ProductId=request.ProductId,
+                ShoppingListId=ShoppingListId
+            };
+
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+
+        [HttpPut("{id}/items/{ShoppingListItemId}")]
+        public async Task<ActionResult> UpdateItem(Guid Id, Guid ShoppingListItemId, [FromBody] UpdateShoppingListItemCommand command)
+        {
+            command.ShoppingListItemId = ShoppingListItemId;
+
+            try
+            {
+                await _mediator.Send(command);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpDelete("{id}/items/{ShoppingListItemId}")]
+        public async Task<ActionResult> DeleteItem(Guid Id, Guid ShoppingListItemId)
+        {
+            var command = new DeleteShoppingListItemCommand { ShoppingListItemId = ShoppingListItemId, };
 
             try
             {
