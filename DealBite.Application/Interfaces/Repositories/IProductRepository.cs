@@ -12,5 +12,7 @@ namespace DealBite.Application.Interfaces.Repositories
         Task<(IEnumerable<Product> Items, int TotalCount)> GetOnSaleAsync(string? searchText, Guid? categoryId, int page, int pageSize);
         Task<ProductPrice?> GetEstimatedPriceMinimumWithDetailsAsync(Guid productId);
 
+        Task<List<ProductPrice>> GetProductsWithPricesAsync(List<Guid> productIds);
+
     }
 }
