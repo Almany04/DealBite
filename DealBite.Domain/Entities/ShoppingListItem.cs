@@ -1,8 +1,5 @@
 ﻿using DealBite.Domain.Common;
 using DealBite.Domain.ValueObjects;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DealBite.Domain.Entities
 {
@@ -14,7 +11,10 @@ namespace DealBite.Domain.Entities
         public Money EstimatedPrice { get; set; }
         public Guid ProductId { get; set; }
         public Product? Product { get; set; }
-        public Guid StoreId { get; set; }
+        public Guid? StoreId { get; set; }
         public Store? Store { get; set; }
+
+        public Guid ShoppingListId { get; set; }
+        public ShoppingList? ShoppingList { get; set; }
     }
 }

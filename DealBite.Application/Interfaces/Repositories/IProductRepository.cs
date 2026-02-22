@@ -1,7 +1,4 @@
 ﻿using DealBite.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DealBite.Application.Interfaces.Repositories
 {
@@ -13,6 +10,7 @@ namespace DealBite.Application.Interfaces.Repositories
         Task<List<Product>> GetByStoreIdAsync(Guid storeId, bool onlyActive=false);
         Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(string? searchText, Guid? categoryId, int page, int pageSize);
         Task<(IEnumerable<Product> Items, int TotalCount)> GetOnSaleAsync(string? searchText, Guid? categoryId, int page, int pageSize);
+        Task<ProductPrice?> GetEstimatedPriceMinimumWithDetailsAsync(Guid productId);
 
     }
 }

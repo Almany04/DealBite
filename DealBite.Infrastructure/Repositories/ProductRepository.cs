@@ -56,6 +56,18 @@ namespace DealBite.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<ProductPrice?> GetEstimatedPriceMinimumWithDetailsAsync(Guid productId)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            return await _context.ProductPrices
+                .AsNoTracking()
+                .Where(p => p.ProductId == productId && p.ValidTo >= today)
+                .Include(p => p.Store)
+                .OrderBy(p => p.Price.Amount)
+                .FirstOrDefaultAsync();
+
+        }
+
         public async Task<(IEnumerable<Product> Items, int TotalCount)> GetOnSaleAsync(string? searchText, Guid? categoryId, int page, int pageSize)
         {
             var query = _context.Products.AsNoTracking().AsQueryable();

@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using DealBite.Application.Interfaces.Repositories;
-using DealBite.Domain.Entities;
+
 using DealBite.Domain.ValueObjects;
 using MediatR;
 
-namespace DealBite.Application.Features.ShoppingLists.Commands
+namespace DealBite.Application.Features.ShoppingLists.Commands.ShoppingListCommands
 {
     public class CreateShoppingListCommand : IRequest<Guid>
     {
@@ -22,7 +22,7 @@ namespace DealBite.Application.Features.ShoppingLists.Commands
 
         public async Task<Guid> Handle(CreateShoppingListCommand request, CancellationToken cancellationToken)
         {
-            var shoppingList = new ShoppingList
+            var shoppingList = new Domain.Entities.ShoppingList
             {
                 Name = request.Name,
                 UserId = request.UserId,
