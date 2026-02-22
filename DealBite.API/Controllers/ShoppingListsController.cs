@@ -2,6 +2,7 @@
 using DealBite.Application.Features.ShoppingLists.Commands.ShoppingListCommands;
 using DealBite.Application.Features.ShoppingLists.Commands.ShoppingListItemCommands;
 using DealBite.Application.Features.ShoppingLists.Queries.GetShoppingListById;
+using DealBite.Application.Features.ShoppingLists.Queries.GetShoppingListOptimization;
 using DealBite.Application.Features.ShoppingLists.Queries.GetUserShoppingLists;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -151,6 +152,19 @@ namespace DealBite.API.Controllers
                 return NotFound();
             }
 
+        }
+
+        [HttpGet("{id}/optimize")]
+        public async Task<ActionResult<ShoppingListOptimizationResultDto>> OptimizeShoppingList(Guid id, [FromQuery] string mode = "single")
+        {
+            if (mode.ToLower() == "single")
+            {
+                var query = new GetShoppingListOptimizationQuery { Id = id };
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+
+            return BadRequest("Jelenleg csak a 'single' optimalizációs mód támogatott.");
         }
     }
 }

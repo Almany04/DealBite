@@ -108,6 +108,16 @@ namespace DealBite.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<ProductPrice>> GetProductsWithPricesAsync(List<Guid> productIds)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            return await _context.ProductPrices
+                 .Include(p=>p.Store)
+                 .Where(p => productIds.Contains(p.ProductId) && p.ValidTo >= today)
+                 .ToListAsync();
+                
+        }
+
         public async Task<(IEnumerable<Product> Items, int TotalCount)> SearchAsync(string? searchText, Guid? categoryId, int page, int pageSize)
         {
             var query = _context.Products.AsNoTracking().AsQueryable();
