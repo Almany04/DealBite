@@ -4,10 +4,10 @@ using System.Text;
 
 namespace DealBite.Application.DTOs
 {
-    public class ShoppingListOptimizationResultDto
+    public class SingleStoreOptimizationResultDto
     {
         public Guid ShoppingListId { get; set; }
         public int TotalItemsInList { get; set; }
-        public List<StoreOptimizationResultDto> StoreRankings { get; set; } = new();
+        public List<SingleStoreRankingDto> StoreRankings { get; set; } = new();
     }
 }

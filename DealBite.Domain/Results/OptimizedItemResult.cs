@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DealBite.Application.DTOs
+namespace DealBite.Domain.Results
 {
-    public class OptimizedItemDto
+    public class OptimizedItemResult
     {
         public Guid ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
