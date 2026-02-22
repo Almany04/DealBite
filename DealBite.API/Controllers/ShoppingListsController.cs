@@ -1,8 +1,9 @@
 ﻿using DealBite.Application.DTOs;
 using DealBite.Application.Features.ShoppingLists.Commands.ShoppingListCommands;
 using DealBite.Application.Features.ShoppingLists.Commands.ShoppingListItemCommands;
+using DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptimization;
 using DealBite.Application.Features.ShoppingLists.Queries.GetShoppingListById;
-using DealBite.Application.Features.ShoppingLists.Queries.GetShoppingListOptimization;
+using DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOptimization;
 using DealBite.Application.Features.ShoppingLists.Queries.GetUserShoppingLists;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -42,6 +43,12 @@ namespace DealBite.API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ShoppingListDto>> GetById(Guid Id)
         {
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
+            {
+                return Unauthorized("Érvénytelen felhasználói azonosító.");
+            }
             try
             {
                 var query = new GetShoppingListByIdQuery() { Id = Id };
@@ -155,16 +162,30 @@ namespace DealBite.API.Controllers
         }
 
         [HttpGet("{id}/optimize")]
-        public async Task<ActionResult<ShoppingListOptimizationResultDto>> OptimizeShoppingList(Guid id, [FromQuery] string mode = "single")
+        public async Task<IActionResult> OptimizeShoppingList(Guid id, [FromQuery] string mode = "single", [FromQuery] List<Guid>? storeIds = null)
         {
-            if (mode.ToLower() == "single")
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
             {
-                var query = new GetShoppingListOptimizationQuery { Id = id };
+                return Unauthorized("Érvénytelen felhasználói azonosító.");
+            }
+
+            if (string.Equals(mode, "single", StringComparison.OrdinalIgnoreCase))
+            {
+                var query = new GetSingleStoreOptimizationQuery { Id = id };
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }
 
-            return BadRequest("Jelenleg csak a 'single' optimalizációs mód támogatott.");
+            if (string.Equals(mode, "multi", StringComparison.OrdinalIgnoreCase))
+            {
+                var query = new GetMultiStoreOptimizationQuery { Id = id, StoreIds = storeIds };
+                var result = await _mediator.Send(query);
+                return Ok(result);
+            }
+
+            return BadRequest("Támogatott módok: 'single', 'multi'.");
         }
     }
 }

@@ -8,30 +8,26 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DealBite.Application.Features.ShoppingLists.Queries.GetShoppingListOptimization
+namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOptimization
 {
-    public class GetShoppingListOptimizationQuery : IRequest<ShoppingListOptimizationResultDto>
+    public class GetSingleStoreOptimizationQuery : IRequest<SingleStoreOptimizationResultDto>
     {
         public Guid Id { get; set; }
     }
-    public class GetShoppingListOptimizationHandler : IRequestHandler<GetShoppingListOptimizationQuery, ShoppingListOptimizationResultDto>
+    public class GetSingleStoreOptimizationHandler : IRequestHandler<GetSingleStoreOptimizationQuery, SingleStoreOptimizationResultDto>
     {
         private readonly IShoppingListRepository _shoppingListRepository;
         private readonly IPriceHistoryRepository _priceHistoryRepository;
-        private readonly IStoreRepository _storeRepository;
         private readonly IProductRepository _productRepository;
-        private readonly IMapper _mapper;
 
-        public GetShoppingListOptimizationHandler(IShoppingListRepository shoppingListRepository, IPriceHistoryRepository priceHistoryRepository, IStoreRepository storeRepository, IProductRepository productRepository, IMapper mapper)
+        public GetSingleStoreOptimizationHandler(IShoppingListRepository shoppingListRepository, IPriceHistoryRepository priceHistoryRepository, IProductRepository productRepository)
         {
             _shoppingListRepository = shoppingListRepository;
             _priceHistoryRepository = priceHistoryRepository;
-            _storeRepository = storeRepository;
             _productRepository = productRepository;
-            _mapper = mapper;
         }
 
-        public async Task<ShoppingListOptimizationResultDto> Handle(GetShoppingListOptimizationQuery request, CancellationToken cancellationToken)
+        public async Task<SingleStoreOptimizationResultDto> Handle(GetSingleStoreOptimizationQuery request, CancellationToken cancellationToken)
         {
             var shoppinglist = await _shoppingListRepository.GetByIdWithItemsAsync(request.Id);
 
@@ -59,12 +55,13 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetShoppingListOpt
 
             var storeGroups = productsWithPrices.GroupBy(p => p.StoreId);
 
-            var storeRankings = new List<StoreOptimizationResultDto>();
+            var storeRankings = new List<SingleStoreRankingDto>();
 
             foreach (var group in storeGroups)
             {
-                var storeOptimization = new StoreOptimizationResultDto
+                var storeOptimization = new SingleStoreRankingDto
                 {
+                    LogoUrl= group.First().Store!.LogoUrl,
                     StoreId = group.Key,
                     StoreName = group.First().Store!.Name,
                     AvailableItemsCount = 0,
@@ -87,12 +84,16 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetShoppingListOpt
 
                     var itemDto = new OptimizedItemDto
                     {
+                        ProductName=listItem.ProductName,
                         ProductId = listItem.ProductId,
                         IsAvailable = isAvailable,
                         Quantity = (decimal)listItem.Quantity,
                         UnitPrice = unitPrice,
                         TotalPrice = unitPrice * (decimal)listItem.Quantity,
-                        SavedOnItem = savedOnItem
+                        SavedOnItem = savedOnItem,
+                        ReferencePriceAmount=referencePrices.TryGetValue(listItem.ProductId, out var refForDto) 
+                            ?   refForDto.MedianPrice.Amount
+                            :   null
                     };
 
                     storeOptimization.Items.Add(itemDto);
@@ -108,11 +109,11 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetShoppingListOpt
                 storeRankings.Add(storeOptimization);
             }
 
-            var finalResult = new ShoppingListOptimizationResultDto
+            var finalResult = new SingleStoreOptimizationResultDto
             {
                 ShoppingListId = request.Id,
                 TotalItemsInList = shoppinglist.ShoppingListItems.Count,
-                StoreRankings = storeRankings.OrderByDescending(s => s.TotalSaved).ToList()
+                StoreRankings = storeRankings.OrderByDescending(s => s.AvailableItemsCount).ThenByDescending(s=>s.TotalEstimatedPrice).ToList()
             };
 
             return finalResult;
