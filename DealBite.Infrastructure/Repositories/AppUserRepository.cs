@@ -14,7 +14,7 @@ namespace DealBite.Infrastructure.Repositories
         {
         }
 
-        public async Task<AppUser?> GetByIdentityUserIdAsync(string identityUserId)
+        public async Task<AppUser?> GetByIdentityUserIdAsync(Guid identityUserId)
         {
             return await _context.AppUsers
                  .FirstOrDefaultAsync(p => p.IdentityUserId == identityUserId);

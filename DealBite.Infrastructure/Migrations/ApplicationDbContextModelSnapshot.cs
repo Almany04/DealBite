@@ -44,9 +44,8 @@ namespace DealBite.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("IdentityUserId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("IdentityUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("LastLoginAt")
                         .HasColumnType("timestamp with time zone");

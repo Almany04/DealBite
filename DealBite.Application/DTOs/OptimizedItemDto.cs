@@ -14,5 +14,7 @@ namespace DealBite.Application.DTOs
         public decimal TotalPrice { get; set; }
         public decimal SavedOnItem { get; set; }
         public decimal? ReferencePriceAmount { get; set; }
+        public decimal? DeviationPercent { get; set; }
+        public string? PriceEvaluation { get; set; }
     }
 }
