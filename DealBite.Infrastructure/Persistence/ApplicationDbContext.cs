@@ -19,6 +19,8 @@ namespace DealBite.Infrastructure.Persistence
         public DbSet<PriceHistory> PriceHistories { get; set; }
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
+        public DbSet<RecipeStep> RecipeSteps { get; set; }
+        public DbSet<RecipeGenerationCache> RecipeGenerationCaches { get; set; }
         public DbSet<AppUser> AppUsers { get; set; }
         public DbSet<ShoppingList> ShoppingLists { get; set; }
         public DbSet<ShoppingListItem> ShoppingListItems { get; set; }
