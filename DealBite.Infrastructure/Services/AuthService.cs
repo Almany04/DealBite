@@ -14,31 +14,32 @@ namespace DealBite.Infrastructure.Services
     {
         private readonly UserManager<ApplicationDbUser> _manager;
         private readonly ApplicationDbContext _context;
-        private readonly IGenericRepository<AppUser> _appuserRepository;
+        private readonly IAppUserRepository _appUserRepository;
 
-        public AuthService(UserManager<ApplicationDbUser> manager, ApplicationDbContext context, IGenericRepository<AppUser> appuserRepository)
+        public AuthService(UserManager<ApplicationDbUser> manager, ApplicationDbContext context, IAppUserRepository appUserRepository)
         {
             _manager = manager;
             _context = context;
-            _appuserRepository = appuserRepository;
+            _appUserRepository = appUserRepository;
         }
 
         public async Task<(bool Success, string? Error, Guid? UserId, string? Email)> LoginAsync(string email, string password)
         {
-            var findByEmail =await _manager.FindByEmailAsync(email);
+            var identityUser = await _manager.FindByEmailAsync(email);
 
-            if (findByEmail == null)
-            {
-                return (false, "Hibás email vagy jelszó", null, null);
-            }
-            var checkPassword = await _manager.CheckPasswordAsync(findByEmail ,password);
-
-            if (!checkPassword)
+            if (identityUser == null || !await _manager.CheckPasswordAsync(identityUser, password))
             {
                 return (false, "Hibás email vagy jelszó", null, null);
             }
 
-            return (true, null, findByEmail.Id, findByEmail.Email);
+            var appUser = await _appUserRepository.GetByIdentityUserIdAsync(identityUser.Id);
+
+            if (appUser == null)
+            {
+                return (false, "Felhasználói profil nem található", null, null);
+            }
+
+            return (true, null, appUser.Id, identityUser.Email);
         }
 
         public async Task<(bool Success, string? Error, Guid? UserId, string? Email)> RegisterAsync(string email, string password, string displayName)
@@ -65,17 +66,17 @@ namespace DealBite.Infrastructure.Services
 
                     var appUser = new AppUser
                     {
-                        IdentityUserId = identityUser.Id.ToString(),
+                        IdentityUserId = identityUser.Id,
                         Email = email,
                         DisplayName = displayName,
                         LastLoginAt = DateTimeOffset.UtcNow
                     };
 
-                    await _appuserRepository.AddAsync(appUser);
+                    await _appUserRepository.AddAsync(appUser);
 
                     await transaction.CommitAsync();
 
-                    return (true, null, identityUser.Id, email);
+                    return (true, null, appUser.Id, email);
                 }
                 catch (Exception ex)
                 {

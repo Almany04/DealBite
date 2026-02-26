@@ -23,5 +23,16 @@ namespace DealBite.Infrastructure.Repositories
                 .OrderBy(ph => ph.RecordedAt)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<PriceHistory>> GetByProductIdWithTimeLimitAsync(Guid productId, DateTimeOffset since)
+        {
+            return await _context.PriceHistories
+               .AsNoTracking()
+               .Where(ph => ph.ProductId == productId)
+               .Where(ph=>ph.RecordedAt>=since)
+               .Include(ph => ph.Store)
+               .OrderBy(ph => ph.RecordedAt)
+               .ToListAsync();
+        }
     }
 }

@@ -5,7 +5,7 @@ namespace DealBite.Domain.Entities
 {
     public class AppUser:BaseEntity
     {
-        public required string IdentityUserId { get; set; }
+        public required Guid IdentityUserId { get; set; }
         public required string Email { get; set; }
         public required string DisplayName { get; set; }
         public Point? DefaultLocation { get; set; }

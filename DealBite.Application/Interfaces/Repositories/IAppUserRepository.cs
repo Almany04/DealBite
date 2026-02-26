@@ -7,6 +7,6 @@ namespace DealBite.Application.Interfaces.Repositories
 {
     public interface IAppUserRepository:IGenericRepository<AppUser>
     {
-        Task<AppUser?> GetByIdentityUserIdAsync(string identityUserId);
+        Task<AppUser?> GetByIdentityUserIdAsync(Guid identityUserId);
     }
 }

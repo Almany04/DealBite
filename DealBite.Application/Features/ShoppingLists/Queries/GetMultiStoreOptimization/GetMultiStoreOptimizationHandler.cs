@@ -43,7 +43,7 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptim
 
             foreach (var productId in productIds)
             {
-                var priceHistory = await _priceHistoryRepository.GetByProductIdAsync(productId);
+                var priceHistory = await _priceHistoryRepository.GetByProductIdWithTimeLimitAsync(productId, DateTimeOffset.UtcNow.AddDays(-56));
                 if (priceHistory.Any())
                 {
                     var historicPricesList = priceHistory.Select(ph => ph.Price.Amount).ToList();
@@ -66,10 +66,12 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptim
                 ReferencePriceAmount = combo.ReferencePriceAmount,
                 UnavailableItems = combo.UnavailableItems.Select(u => new OptimizedItemDto
                 {
+                    
                     ProductId = u.ProductId,
                     ProductName = u.ProductName,
                     Quantity = u.Quantity,
                     IsAvailable = false
+
                 }).ToList(),
                 StoreAssignments=combo.StoreAssignments.Select(a=>new StoreAssignmentDto
                 {
@@ -77,16 +79,23 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptim
                     StoreName=a.StoreName,
                     LogoUrl=a.LogoUrl,
                     StoreSubTotal=a.StoreSubTotal,
-                    Items=a.Items.Select(i=>new OptimizedItemDto
+                    Items = a.Items.Select(i =>
                     {
-                        ProductId = i.ProductId,
-                        ProductName = i.ProductName,
-                        Quantity = i.Quantity,
-                        IsAvailable = true,
-                        UnitPrice= i.UnitPrice,
-                        TotalPrice=i.TotalPrice,
-                        SavedOnItem=i.SavedOnItem,
-                        ReferencePriceAmount=i.ReferencePriceAmount
+                        var evaluation = PriceEvaluator.PriceCalculator(i.UnitPrice, i.ReferencePriceAmount);
+                        return new OptimizedItemDto
+                        {
+                            ProductId = i.ProductId,
+                            ProductName = i.ProductName,
+                            Quantity = i.Quantity,
+                            IsAvailable = true,
+                            UnitPrice = i.UnitPrice,
+                            TotalPrice = i.TotalPrice,
+                            SavedOnItem = i.SavedOnItem,
+                            ReferencePriceAmount = i.ReferencePriceAmount,
+                            DeviationPercent = evaluation.DeviationPercent,
+                            PriceEvaluation = evaluation.priceEvaluation.ToString()
+
+                        };
                     }).ToList()
                 }).ToList()
             }).ToList();

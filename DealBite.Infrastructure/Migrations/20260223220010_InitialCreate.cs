@@ -21,9 +21,9 @@ namespace DealBite.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    IdentityUserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
                     DisplayName = table.Column<string>(type: "text", nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: true),
                     DefaultLocation = table.Column<Point>(type: "geography(Point, 4326)", nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     LastLoginAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
@@ -265,6 +265,7 @@ namespace DealBite.Infrastructure.Migrations
                     AiGeneratedImageUrl = table.Column<string>(type: "text", nullable: true),
                     Quantity = table.Column<double>(type: "double precision", nullable: false),
                     UnitType = table.Column<int>(type: "integer", nullable: false),
+                    Segment = table.Column<int>(type: "integer", nullable: false),
                     IsIngredient = table.Column<bool>(type: "boolean", nullable: false),
                     CategoryId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -340,6 +341,8 @@ namespace DealBite.Infrastructure.Migrations
                     ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
                     ValidTo = table.Column<DateOnly>(type: "date", nullable: false),
                     Source = table.Column<int>(type: "integer", nullable: false),
+                    PromotionType = table.Column<int>(type: "integer", nullable: false),
+                    AppRequired = table.Column<string>(type: "text", nullable: true),
                     LastScrapedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     ProductId = table.Column<Guid>(type: "uuid", nullable: false),
                     StoreId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -401,8 +404,8 @@ namespace DealBite.Infrastructure.Migrations
                     Quantity = table.Column<double>(type: "double precision", nullable: false),
                     IsChecked = table.Column<bool>(type: "boolean", nullable: false),
                     ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StoreId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ShoppingListId = table.Column<Guid>(type: "uuid", nullable: true),
+                    StoreId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ShoppingListId = table.Column<Guid>(type: "uuid", nullable: false),
                     EstimatedPriceAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     EstimatedPriceCurrency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false)
                 },
@@ -419,14 +422,20 @@ namespace DealBite.Infrastructure.Migrations
                         name: "FK_ShoppingListItems_ShoppingLists_ShoppingListId",
                         column: x => x.ShoppingListId,
                         principalTable: "ShoppingLists",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ShoppingListItems_Stores_StoreId",
                         column: x => x.StoreId,
                         principalTable: "Stores",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AppUsers_IdentityUserId",
+                table: "AppUsers",
+                column: "IdentityUserId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

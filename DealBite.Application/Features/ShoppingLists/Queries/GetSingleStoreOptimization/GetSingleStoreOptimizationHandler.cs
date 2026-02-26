@@ -42,7 +42,7 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOpti
 
             foreach (var productId in productIds)
             {
-                var priceHistory = await _priceHistoryRepository.GetByProductIdAsync(productId);
+                var priceHistory = await _priceHistoryRepository.GetByProductIdWithTimeLimitAsync(productId, DateTimeOffset.UtcNow.AddDays(-56));
                 if (priceHistory.Any())
                 {
                     var historicPricesList = priceHistory.Select(ph => ph.Price.Amount).ToList();
@@ -74,13 +74,22 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOpti
                 {
                     var storePriceForProduct = group.FirstOrDefault(p => p.ProductId == listItem.ProductId);
 
+                    decimal? devPercent = null;
+                    string? priceEval = null;
+
                     bool isAvailable = storePriceForProduct != null;
                     decimal unitPrice = isAvailable ? storePriceForProduct!.Price.Amount : 0m;
 
                     decimal savedOnItem = 0m;
-
-                    if (isAvailable && referencePrices.TryGetValue(listItem.ProductId, out var refPrice))
-                        savedOnItem=(refPrice.MedianPrice.Amount - unitPrice) * (decimal)listItem.Quantity;
+                    decimal? refAmount = referencePrices.TryGetValue(listItem.ProductId, out var refPrice)
+                                        ? refPrice.MedianPrice.Amount
+                                        : null;
+                    if (isAvailable && refAmount.HasValue)
+                    {
+                        var evaluation = PriceEvaluator.PriceCalculator(unitPrice, refAmount);
+                        devPercent = evaluation.DeviationPercent;
+                        priceEval = evaluation.priceEvaluation.ToString();
+                    }
 
                     var itemDto = new OptimizedItemDto
                     {
@@ -91,9 +100,9 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOpti
                         UnitPrice = unitPrice,
                         TotalPrice = unitPrice * (decimal)listItem.Quantity,
                         SavedOnItem = savedOnItem,
-                        ReferencePriceAmount=referencePrices.TryGetValue(listItem.ProductId, out var refForDto) 
-                            ?   refForDto.MedianPrice.Amount
-                            :   null
+                        ReferencePriceAmount = refAmount,
+                        DeviationPercent = devPercent,
+                        PriceEvaluation = priceEval
                     };
 
                     storeOptimization.Items.Add(itemDto);

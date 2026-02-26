@@ -35,7 +35,7 @@ namespace DealBite.Application.Features.Auth.Commands
 
             var token = _token.GenerateToken(result.UserId!.Value, result.Email!);
 
-            var appUser = await _appUserRepository.GetByIdentityUserIdAsync(result.UserId!.Value.ToString());
+            var appUser = await _appUserRepository.GetByIdentityUserIdAsync(result.UserId!.Value);
             if (appUser == null)
             {
                 throw new Exception("Felhasználó nem található");

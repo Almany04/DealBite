@@ -8,5 +8,7 @@ namespace DealBite.Application.Interfaces.Repositories
     public interface IPriceHistoryRepository:IGenericRepository<PriceHistory>
     {
         Task<IEnumerable<PriceHistory>> GetByProductIdAsync(Guid productId);
+        Task<IEnumerable<PriceHistory>> GetByProductIdWithTimeLimitAsync(Guid productId, DateTimeOffset since);
+
     }
 }
