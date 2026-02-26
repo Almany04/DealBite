@@ -61,6 +61,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<DealBite.API.Middleware.GlobalExceptionMiddleware>();
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

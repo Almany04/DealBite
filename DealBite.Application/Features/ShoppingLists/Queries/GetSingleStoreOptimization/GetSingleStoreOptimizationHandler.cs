@@ -86,6 +86,7 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOpti
                                         : null;
                     if (isAvailable && refAmount.HasValue)
                     {
+                        savedOnItem = (refAmount.Value - unitPrice) * (decimal)listItem.Quantity;
                         var evaluation = PriceEvaluator.PriceCalculator(unitPrice, refAmount);
                         devPercent = evaluation.DeviationPercent;
                         priceEval = evaluation.priceEvaluation.ToString();
@@ -122,7 +123,7 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOpti
             {
                 ShoppingListId = request.Id,
                 TotalItemsInList = shoppinglist.ShoppingListItems.Count,
-                StoreRankings = storeRankings.OrderByDescending(s => s.AvailableItemsCount).ThenByDescending(s=>s.TotalEstimatedPrice).ToList()
+                StoreRankings = storeRankings.OrderByDescending(s => s.AvailableItemsCount).ThenBy(s=>s.TotalEstimatedPrice).ToList()
             };
 
             return finalResult;

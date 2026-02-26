@@ -19,39 +19,26 @@ namespace DealBite.API.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest request)
         {
-            try
+            var command = new RegisterCommand
             {
-                var command = new RegisterCommand
-                {
-                    Email = request.Email,
-                    Password = request.Password,
-                    DisplayName = request.DisplayName
-                };
-                var result = await _mediator.Send(command);
-                return Ok(result);
-            }
-            catch(Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                Email = request.Email,
+                Password = request.Password,
+                DisplayName = request.DisplayName
+            };
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
+
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
         {
-            try
+            var command = new LoginCommand
             {
-                var command = new LoginCommand
-                {
-                    Email = request.Email,
-                    Password = request.Password,
-                };
-                var result = await _mediator.Send(command);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                Email = request.Email,
+                Password = request.Password,
+            };
+            var result = await _mediator.Send(command);
+            return Ok(result);
         }
     }
 }
