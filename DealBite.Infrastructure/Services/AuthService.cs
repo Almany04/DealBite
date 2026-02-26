@@ -23,23 +23,23 @@ namespace DealBite.Infrastructure.Services
             _appUserRepository = appUserRepository;
         }
 
-        public async Task<(bool Success, string? Error, Guid? UserId, string? Email)> LoginAsync(string email, string password)
+        public async Task<(bool Success, string? Error, Guid? UserId, string? Email, string? DisplayName)> LoginAsync(string email, string password)
         {
             var identityUser = await _manager.FindByEmailAsync(email);
 
             if (identityUser == null || !await _manager.CheckPasswordAsync(identityUser, password))
             {
-                return (false, "Hibás email vagy jelszó", null, null);
+                return (false, "Hibás email vagy jelszó", null, null, null);
             }
 
             var appUser = await _appUserRepository.GetByIdentityUserIdAsync(identityUser.Id);
 
             if (appUser == null)
             {
-                return (false, "Felhasználói profil nem található", null, null);
+                return (false, "Felhasználói profil nem található", null, null, null);
             }
 
-            return (true, null, appUser.Id, identityUser.Email);
+            return (true, null, appUser.Id, identityUser.Email, appUser.DisplayName);
         }
 
         public async Task<(bool Success, string? Error, Guid? UserId, string? Email)> RegisterAsync(string email, string password, string displayName)

@@ -17,13 +17,11 @@ namespace DealBite.Application.Features.Auth.Commands
     {
         private readonly IAuthService _auth;
         private readonly ITokenService _token;
-        private readonly IAppUserRepository _appUserRepository;
 
-        public LoginCommandHandler(IAuthService auth, ITokenService token,IAppUserRepository appUserRepository)
+        public LoginCommandHandler(IAuthService auth, ITokenService token)
         {
             _auth = auth;
             _token = token;
-            _appUserRepository = appUserRepository;
         }
         public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
         { 
@@ -35,17 +33,11 @@ namespace DealBite.Application.Features.Auth.Commands
 
             var token = _token.GenerateToken(result.UserId!.Value, result.Email!);
 
-            var appUser = await _appUserRepository.GetByIdentityUserIdAsync(result.UserId!.Value);
-            if (appUser == null)
-            {
-                throw new Exception("Felhasználó nem található");
-            }
-
             return new AuthResponse
             {
                 Token = token,
                 Email = result.Email!,
-                DisplayName = appUser.DisplayName
+                DisplayName = result.DisplayName!
             };
         }
     }

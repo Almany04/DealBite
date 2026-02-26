@@ -47,10 +47,11 @@ namespace DealBite.Application.Features.ShoppingLists.Commands.ShoppingListItemC
                 listWithItems!.ShoppingListItems.ToList().AsReadOnly()
                 );
 
-            listWithItems.TotalEstimatedPrice = totals.TotalEstimatedPrice;
-            listWithItems.TotalSaved = totals.TotalSaved;
+            var list = await _shoppingListRepository.GetByIdAsync(shoppingListItem.ShoppingListId);
+            list!.TotalEstimatedPrice = totals.TotalEstimatedPrice;
+            list.TotalSaved = totals.TotalSaved;
 
-            await _shoppingListRepository.UpdateAsync(listWithItems);
+            await _shoppingListRepository.UpdateAsync(list);
             return Unit.Value;
         }
     }

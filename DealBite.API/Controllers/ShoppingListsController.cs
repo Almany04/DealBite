@@ -7,11 +7,8 @@ using DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOptimiza
 using DealBite.Application.Features.ShoppingLists.Queries.GetUserShoppingLists;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace DealBite.API.Controllers
 {
@@ -30,29 +27,27 @@ namespace DealBite.API.Controllers
         [HttpGet]
         public async Task<ActionResult<List<ShoppingListDto>>> GetMyLists()
         {
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if(string.IsNullOrEmpty(userIdString)||!Guid.TryParse(userIdString, out Guid userId))
-            {
+            if (!TryGetUserId(out var userId))
                 return Unauthorized("Érvénytelen felhasználói azonosító.");
-            }
+
             var query = new GetUserShoppingListsQuery() { UserId = userId };
             var result = await _mediator.Send(query);
             return Ok(result);
         }
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ShoppingListDto>> GetById(Guid Id)
-        {
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
-            {
-                return Unauthorized("Érvénytelen felhasználói azonosító.");
-            }
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ShoppingListDto>> GetById(Guid id)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized();
+
             try
             {
-                var query = new GetShoppingListByIdQuery() { Id = Id };
-                var result = await _mediator.Send(query);
+                var result = await _mediator.Send(new GetShoppingListByIdQuery { Id = id });
+
+                if (result.UserId != userId)
+                    return Forbid();
+
                 return Ok(result);
             }
             catch (KeyNotFoundException)
@@ -60,17 +55,15 @@ namespace DealBite.API.Controllers
                 return NotFound();
             }
         }
+
         public record CreateListRequest(string Name);
 
         [HttpPost]
         public async Task<ActionResult<Guid>> Create([FromBody] CreateListRequest request)
         {
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
-            {
+            if (!TryGetUserId(out var userId))
                 return Unauthorized("Érvénytelen felhasználói azonosító.");
-            }
+
             var command = new CreateShoppingListCommand
             {
                 Name = request.Name,
@@ -84,6 +77,12 @@ namespace DealBite.API.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(Guid id, [FromBody] UpdateShoppingListCommand command)
         {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized();
+
+            if (!await IsOwner(id, userId))
+                return Forbid();
+
             command.Id = id;
 
             try
@@ -95,12 +94,18 @@ namespace DealBite.API.Controllers
             {
                 return NotFound();
             }
-
         }
+
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(Guid id)
         {
-            var command = new DeleteShoppingListCommand { Id = id};
+            if (!TryGetUserId(out var userId))
+                return Unauthorized();
+
+            if (!await IsOwner(id, userId))
+                return Forbid();
+
+            var command = new DeleteShoppingListCommand { Id = id };
 
             try
             {
@@ -111,27 +116,40 @@ namespace DealBite.API.Controllers
             {
                 return NotFound();
             }
-
         }
+
         public record CreateListItemRequest(Guid ProductId, double Quantity);
-        [HttpPost("{ShoppingListId}/items")]
-        public async Task<ActionResult<Guid>> CreateItem(Guid ShoppingListId,[FromBody] CreateListItemRequest request)
-        { 
+
+        [HttpPost("{shoppingListId}/items")]
+        public async Task<ActionResult<Guid>> CreateItem(Guid shoppingListId, [FromBody] CreateListItemRequest request)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized();
+
+            if (!await IsOwner(shoppingListId, userId))
+                return Forbid();
+
             var command = new AddShoppingListItemCommand
             {
-                Quantity=request.Quantity,
-                ProductId=request.ProductId,
-                ShoppingListId=ShoppingListId
+                Quantity = request.Quantity,
+                ProductId = request.ProductId,
+                ShoppingListId = shoppingListId
             };
 
             var result = await _mediator.Send(command);
             return Ok(result);
         }
 
-        [HttpPut("{id}/items/{ShoppingListItemId}")]
-        public async Task<ActionResult> UpdateItem(Guid Id, Guid ShoppingListItemId, [FromBody] UpdateShoppingListItemCommand command)
+        [HttpPut("{id}/items/{shoppingListItemId}")]
+        public async Task<ActionResult> UpdateItem(Guid id, Guid shoppingListItemId, [FromBody] UpdateShoppingListItemCommand command)
         {
-            command.ShoppingListItemId = ShoppingListItemId;
+            if (!TryGetUserId(out var userId))
+                return Unauthorized();
+
+            if (!await IsOwner(id, userId))
+                return Forbid();
+
+            command.ShoppingListItemId = shoppingListItemId;
 
             try
             {
@@ -144,10 +162,16 @@ namespace DealBite.API.Controllers
             }
         }
 
-        [HttpDelete("{id}/items/{ShoppingListItemId}")]
-        public async Task<ActionResult> DeleteItem(Guid Id, Guid ShoppingListItemId)
+        [HttpDelete("{id}/items/{shoppingListItemId}")]
+        public async Task<ActionResult> DeleteItem(Guid id, Guid shoppingListItemId)
         {
-            var command = new DeleteShoppingListItemCommand { ShoppingListItemId = ShoppingListItemId, };
+            if (!TryGetUserId(out var userId))
+                return Unauthorized();
+
+            if (!await IsOwner(id, userId))
+                return Forbid();
+
+            var command = new DeleteShoppingListItemCommand { ShoppingListItemId = shoppingListItemId };
 
             try
             {
@@ -158,18 +182,16 @@ namespace DealBite.API.Controllers
             {
                 return NotFound();
             }
-
         }
 
         [HttpGet("{id}/optimize")]
         public async Task<IActionResult> OptimizeShoppingList(Guid id, [FromQuery] string mode = "single", [FromQuery] List<Guid>? storeIds = null)
         {
-            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
-            {
+            if (!TryGetUserId(out var userId))
                 return Unauthorized("Érvénytelen felhasználói azonosító.");
-            }
+
+            if (!await IsOwner(id, userId))
+                return Forbid();
 
             if (string.Equals(mode, "single", StringComparison.OrdinalIgnoreCase))
             {
@@ -186,6 +208,28 @@ namespace DealBite.API.Controllers
             }
 
             return BadRequest("Támogatott módok: 'single', 'multi'.");
+        }
+
+        // ── Helper metódusok ──────────────────────────────────────────
+
+        private bool TryGetUserId(out Guid userId)
+        {
+            userId = Guid.Empty;
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return !string.IsNullOrEmpty(claim) && Guid.TryParse(claim, out userId);
+        }
+
+        private async Task<bool> IsOwner(Guid shoppingListId, Guid userId)
+        {
+            try
+            {
+                var list = await _mediator.Send(new GetShoppingListByIdQuery { Id = shoppingListId });
+                return list.UserId == userId;
+            }
+            catch (KeyNotFoundException)
+            {
+                return false;
+            }
         }
     }
 }
