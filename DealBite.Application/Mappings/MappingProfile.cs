@@ -42,6 +42,16 @@ namespace DealBite.Application.Mappings
              .ForMember(dest => dest.TotalSaved, opt => opt.MapFrom(src => src.TotalSaved.Amount));
             CreateMap<ShoppingListItem, ShoppingListItemDto>()
             .ForMember(dest => dest.EstimatedPrice, opt => opt.MapFrom(src => src.EstimatedPrice.Amount));
+
+            CreateMap<Recipe, RecommendedRecipeDto>()
+                .ForMember(dest => dest.TotalSavings, opt => opt.MapFrom(src => src.TotalSavings.Amount));
+            CreateMap<RecipeIngredient, RecipeIngredientDto>()
+                .ForMember(dest => dest.StoreName, opt => opt.MapFrom(src => src.StoreName != null ? src.StoreName : "Ismeretlen"))
+                .ForMember(dest => dest.IsOnSale, opt => opt.MapFrom(src => src.ProductId != null))
+                .ForMember(dest => dest.UnitType, opt => opt.MapFrom(src => src.UnitType.ToString()))
+                .ForMember(dest => dest.SavingsAmount, opt => opt.MapFrom(src => src.SavingsAmount.Amount));
+
+            CreateMap<RecipeStep, RecipeStepDto>();
         }
     }
     

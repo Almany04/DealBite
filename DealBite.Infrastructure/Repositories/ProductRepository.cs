@@ -1,5 +1,6 @@
 ﻿using DealBite.Application.Interfaces.Repositories;
 using DealBite.Domain.Entities;
+using DealBite.Domain.Enums;
 using DealBite.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -99,6 +100,26 @@ namespace DealBite.Infrastructure.Repositories
                 .ToListAsync();
 
             return (items, totalCount);
+        }
+
+        public async Task<List<ProductPrice>> GetOnSaleProductPricesAsync(Guid? storeId, ProductSegment segment)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var query = _context.ProductPrices
+                .AsNoTracking()
+                .Where(s => s.IsOnSale && s.ValidFrom <= today && s.ValidTo >= today)
+                .Where(p => p.Product!.Segment == segment);
+
+            if (storeId.HasValue)
+            {
+                query = query.Where(p => p.StoreId == storeId.Value);
+            }
+
+            return await query
+                .Include(p => p.Product).ThenInclude(pr => pr!.Category)
+                .Include(p => p.Store)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Product>> GetProductsByCategoryAsync(Guid categoryId)

@@ -1,6 +1,8 @@
 ﻿using DealBite.Application.Auth;
 using DealBite.Application.Auth.Interfaces;
+using DealBite.Application.Common.Settings;
 using DealBite.Application.Interfaces.Repositories;
+using DealBite.Application.Interfaces.Services;
 using DealBite.Infrastructure.Identity;
 using DealBite.Infrastructure.Persistence;
 using DealBite.Infrastructure.Repositories;
@@ -40,6 +42,7 @@ namespace DealBite.Infrastructure
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
             services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
+            services.Configure<GeminiSettings>(configuration.GetSection("GeminiSettings"));
             services.AddScoped<IProductRepository, ProductRepository>(); 
             services.AddScoped<IStoreRepository, StoreRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -47,6 +50,8 @@ namespace DealBite.Infrastructure
             services.AddScoped<IShoppingListRepository, ShoppingListRepository>();
             services.AddScoped<IShoppingListItemRepository, ShoppingListItemRepository>();
             services.AddScoped<IPriceHistoryRepository, PriceHistoryRepository>();
+            services.AddHttpClient<IRecipeGeneratorService, RecipeGeneratorService>();
+            services.AddScoped<IRecipeRepository, RecipeRepository>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
