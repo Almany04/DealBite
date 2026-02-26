@@ -1,9 +1,7 @@
 ﻿using DealBite.Application.Auth.DTO;
 using DealBite.Application.Auth.Interfaces;
+using DealBite.Application.Common.Exceptions;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DealBite.Application.Features.Auth.Commands
 {
@@ -26,10 +24,10 @@ namespace DealBite.Application.Features.Auth.Commands
 
         public async Task<AuthResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
-            var result= await _auth.RegisterAsync(request.Email, request.Password, request.DisplayName);
+            var result = await _auth.RegisterAsync(request.Email, request.Password, request.DisplayName);
             if (!result.Success)
             {
-                throw new Exception(result.Error);
+                throw new ValidationException(result.Error!);
             }
             var token = _token.GenerateToken(result.UserId!.Value, result.Email!);
 
@@ -37,7 +35,7 @@ namespace DealBite.Application.Features.Auth.Commands
             {
                 Token = token,
                 Email = result.Email!,
-                DisplayName=request.DisplayName
+                DisplayName = request.DisplayName
             };
         }
     }

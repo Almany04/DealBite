@@ -1,4 +1,5 @@
 ﻿using DealBite.Application.Auth.Interfaces;
+using DealBite.Application.Common.Exceptions;
 using DealBite.Application.Interfaces.Repositories;
 using DealBite.Domain.Entities;
 using DealBite.Infrastructure.Identity;
@@ -61,7 +62,7 @@ namespace DealBite.Infrastructure.Services
                     var result = await _manager.CreateAsync(identityUser, password);
                     if (!result.Succeeded)
                     {
-                        throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
+                        throw new NotFoundException(string.Join(", ", result.Errors.Select(e => e.Description)));
                     }
 
                     var appUser = new AppUser
