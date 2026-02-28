@@ -33,10 +33,11 @@ namespace DealBite.Application.Features.ShoppingLists.Commands.ShoppingListItemC
             if (shoppingListItem.Quantity != request.Quantity)
             {
                 shoppingListItem.Quantity = request.Quantity;
-
-                var cheapestitem= await _productRepository.GetEstimatedPriceMinimumWithDetailsAsync(shoppingListItem.ProductId);
-
-                shoppingListItem.EstimatedPrice = (cheapestitem?.Price ?? Money.Zero) * (decimal)(request.Quantity);
+                if (shoppingListItem.ProductId.HasValue)
+                {
+                    var cheapestitem = await _productRepository.GetEstimatedPriceMinimumWithDetailsAsync(shoppingListItem.ProductId.Value);
+                    shoppingListItem.EstimatedPrice = (cheapestitem?.Price ?? Money.Zero) * (decimal)(request.Quantity);
+                }
             }
 
             await _shoppingListItemRepository.UpdateAsync(shoppingListItem);

@@ -9,7 +9,7 @@ namespace DealBite.Application.Features.ShoppingLists.Commands.ShoppingListItemC
     public class AddShoppingListItemCommand : IRequest<Guid>
     {
         public Guid ShoppingListId { get; set; }
-        public Guid ProductId { get; set; }
+        public Guid? ProductId { get; set; }
         public double Quantity { get; set; }
     }
     public class AddShoppingListItemHandler : IRequestHandler<AddShoppingListItemCommand, Guid>
@@ -31,18 +31,26 @@ namespace DealBite.Application.Features.ShoppingLists.Commands.ShoppingListItemC
             if (shoppingList == null)
                 throw new KeyNotFoundException("Nem létezik ez a bevásárló lista...");
 
-            var product = await _productRepository.GetByIdAsync(request.ProductId);
-            if (product == null)
-                throw new KeyNotFoundException("Nem létezik ez a termék...");
+            string productName = "Névtelen hozzávaló";
+            Money estimatedPrice = Money.Zero;
 
-            var cheapestPrice = await _productRepository.GetEstimatedPriceMinimumWithDetailsAsync(request.ProductId);
+            if (request.ProductId.HasValue)
+            {
+                var product = await _productRepository.GetByIdAsync(request.ProductId.Value);
+                if (product == null)
+                    throw new KeyNotFoundException("Nem létezik ez a termék...");
 
+                productName = product.Name;
+                var cheapestPrice = await _productRepository.GetEstimatedPriceMinimumWithDetailsAsync(request.ProductId.Value);
+                estimatedPrice = (cheapestPrice?.Price ?? Money.Zero) * (decimal)request.Quantity;
+            }
+        
             var item = new Domain.Entities.ShoppingListItem
             {
-                ProductName = product.Name,
+                ProductName = productName,
                 Quantity = request.Quantity,
                 IsChecked = false,
-                EstimatedPrice = (cheapestPrice?.Price ?? Money.Zero) * (decimal)request.Quantity,
+                EstimatedPrice = estimatedPrice,
                 ProductId = request.ProductId,
                 StoreId = null,
                 ShoppingListId=request.ShoppingListId

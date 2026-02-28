@@ -34,7 +34,10 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOpti
             if (shoppinglist == null)
                 throw new KeyNotFoundException($"Ez a lista nem található: {request.Id}");
 
-            var productIds = shoppinglist.ShoppingListItems.Select(item => item.ProductId).ToList();
+            var productIds = shoppinglist.ShoppingListItems
+                            .Where(item => item.ProductId.HasValue)
+                            .Select(item => item.ProductId!.Value)
+                            .ToList();
 
             var productsWithPrices = await _productRepository.GetProductsWithPricesAsync(productIds);
 
@@ -72,7 +75,10 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOpti
 
                 foreach (var listItem in shoppinglist.ShoppingListItems)
                 {
-                    var storePriceForProduct = group.FirstOrDefault(p => p.ProductId == listItem.ProductId);
+                    if (!listItem.ProductId.HasValue)
+                        continue;
+
+                    var storePriceForProduct = group.FirstOrDefault(p => p.ProductId == listItem.ProductId.Value);
 
                     decimal? devPercent = null;
                     string? priceEval = null;
@@ -81,7 +87,7 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOpti
                     decimal unitPrice = isAvailable ? storePriceForProduct!.Price.Amount : 0m;
 
                     decimal savedOnItem = 0m;
-                    decimal? refAmount = referencePrices.TryGetValue(listItem.ProductId, out var refPrice)
+                    decimal? refAmount = referencePrices.TryGetValue(listItem.ProductId.Value, out var refPrice)
                                         ? refPrice.MedianPrice.Amount
                                         : null;
                     if (isAvailable && refAmount.HasValue)
@@ -95,7 +101,7 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetSingleStoreOpti
                     var itemDto = new OptimizedItemDto
                     {
                         ProductName=listItem.ProductName,
-                        ProductId = listItem.ProductId,
+                        ProductId = listItem.ProductId.Value,
                         IsAvailable = isAvailable,
                         Quantity = (decimal)listItem.Quantity,
                         UnitPrice = unitPrice,

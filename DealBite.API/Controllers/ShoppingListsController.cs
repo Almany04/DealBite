@@ -1,4 +1,5 @@
 ﻿using DealBite.Application.DTOs;
+using DealBite.Application.Features.Recipes.Commands;
 using DealBite.Application.Features.ShoppingLists.Commands.ShoppingListCommands;
 using DealBite.Application.Features.ShoppingLists.Commands.ShoppingListItemCommands;
 using DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptimization;
@@ -118,7 +119,7 @@ namespace DealBite.API.Controllers
             }
         }
 
-        public record CreateListItemRequest(Guid ProductId, double Quantity);
+        public record CreateListItemRequest(Guid? ProductId, double Quantity);
 
         [HttpPost("{shoppingListId}/items")]
         public async Task<ActionResult<Guid>> CreateItem(Guid shoppingListId, [FromBody] CreateListItemRequest request)
@@ -209,8 +210,28 @@ namespace DealBite.API.Controllers
 
             return BadRequest("Támogatott módok: 'single', 'multi'.");
         }
+        public record AddRecipeRequest(List<Guid>? SelectedIngredientsIds);
 
-        // ── Helper metódusok ──────────────────────────────────────────
+        [HttpPost("{shoppingListId}/recipes/{recipeId}")]
+        public async Task<ActionResult> AddRecipe(Guid shoppingListId, Guid recipeId, [FromBody] AddRecipeRequest? request)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized();
+
+            if (!await IsOwner(shoppingListId, userId))
+                return Forbid();
+
+            var command = new AddRecipeToShoppingListCommand
+            {
+                RecipeId = recipeId,
+                ShoppingListId = shoppingListId,
+                SelectedIngredientsIds = request?.SelectedIngredientsIds
+            };
+
+            await _mediator.Send(command);
+            return NoContent();
+        }
+
 
         private bool TryGetUserId(out Guid userId)
         {

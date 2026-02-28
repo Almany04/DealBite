@@ -5,9 +5,6 @@ using DealBite.Domain.Entities;
 using DealBite.Domain.Services;
 using DealBite.Domain.ValueObjects;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptimization
 {
@@ -16,26 +13,35 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptim
         public Guid Id { get; set; }
         public List<Guid>? StoreIds { get; set; }
     }
+
     public class GetMultiStoreOptimizationHandler : IRequestHandler<GetMultiStoreOptimizationQuery, MultiStoreOptimizationResultDto>
     {
         private readonly IShoppingListRepository _shoppingListRepository;
         private readonly IPriceHistoryRepository _priceHistoryRepository;
         private readonly IProductRepository _productRepository;
 
-        public GetMultiStoreOptimizationHandler(IShoppingListRepository shoppingListRepository, IPriceHistoryRepository priceHistoryRepository, IProductRepository productRepository)
+        public GetMultiStoreOptimizationHandler(
+            IShoppingListRepository shoppingListRepository,
+            IPriceHistoryRepository priceHistoryRepository,
+            IProductRepository productRepository)
         {
             _shoppingListRepository = shoppingListRepository;
             _priceHistoryRepository = priceHistoryRepository;
             _productRepository = productRepository;
         }
 
-        public async Task<MultiStoreOptimizationResultDto> Handle(GetMultiStoreOptimizationQuery request, CancellationToken cancellationToken)
+        public async Task<MultiStoreOptimizationResultDto> Handle(
+            GetMultiStoreOptimizationQuery request,
+            CancellationToken cancellationToken)
         {
             var shoppingList = await _shoppingListRepository.GetByIdWithItemsAsync(request.Id);
             if (shoppingList == null)
                 throw new KeyNotFoundException($"Ez a lista nem található: {request.Id}");
 
-            var productIds = shoppingList.ShoppingListItems.Select(item => item.ProductId).ToList();
+            var productIds = shoppingList.ShoppingListItems
+                .Where(item => item.ProductId.HasValue)
+                .Select(item => item.ProductId!.Value)
+                .ToList();
 
             var allPrices = await _productRepository.GetProductsWithPricesAsync(productIds);
 
@@ -43,19 +49,23 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptim
 
             foreach (var productId in productIds)
             {
-                var priceHistory = await _priceHistoryRepository.GetByProductIdWithTimeLimitAsync(productId, DateTimeOffset.UtcNow.AddDays(-56));
+                var priceHistory = await _priceHistoryRepository
+                    .GetByProductIdWithTimeLimitAsync(productId, DateTimeOffset.UtcNow.AddDays(-56));
+
                 if (priceHistory.Any())
                 {
                     var historicPricesList = priceHistory.Select(ph => ph.Price.Amount).ToList();
-
                     var referencePrice = ReferencePriceCalculator.Calculate(historicPricesList);
-
                     referencePrices[productId] = referencePrice.MedianPrice.Amount;
                 }
             }
 
+            var itemsWithProduct = shoppingList.ShoppingListItems
+                .Where(i => i.ProductId.HasValue)
+                .ToList();
+
             var comboResults = MultiStoreOptimizer.Optimize(
-                shoppingList.ShoppingListItems.ToList(), allPrices, referencePrices, request.StoreIds);
+                itemsWithProduct, allPrices, referencePrices, request.StoreIds);
 
             var storeComboDtos = comboResults.Select(combo => new StoreComboResultDto
             {
@@ -66,19 +76,17 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptim
                 ReferencePriceAmount = combo.ReferencePriceAmount,
                 UnavailableItems = combo.UnavailableItems.Select(u => new OptimizedItemDto
                 {
-                    
                     ProductId = u.ProductId,
                     ProductName = u.ProductName,
                     Quantity = u.Quantity,
                     IsAvailable = false
-
                 }).ToList(),
-                StoreAssignments=combo.StoreAssignments.Select(a=>new StoreAssignmentDto
+                StoreAssignments = combo.StoreAssignments.Select(a => new StoreAssignmentDto
                 {
-                    StoreId=a.StoreId,
-                    StoreName=a.StoreName,
-                    LogoUrl=a.LogoUrl,
-                    StoreSubTotal=a.StoreSubTotal,
+                    StoreId = a.StoreId,
+                    StoreName = a.StoreName,
+                    LogoUrl = a.LogoUrl,
+                    StoreSubTotal = a.StoreSubTotal,
                     Items = a.Items.Select(i =>
                     {
                         var evaluation = PriceEvaluator.PriceCalculator(i.UnitPrice, i.ReferencePriceAmount);
@@ -94,7 +102,6 @@ namespace DealBite.Application.Features.ShoppingLists.Queries.GetMultiStoreOptim
                             ReferencePriceAmount = i.ReferencePriceAmount,
                             DeviationPercent = evaluation.DeviationPercent,
                             PriceEvaluation = evaluation.priceEvaluation.ToString()
-
                         };
                     }).ToList()
                 }).ToList()
