@@ -11,6 +11,11 @@ namespace DealBite.Infrastructure.Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ShoppingListItem> builder)
         {
+            builder.HasOne(s => s.Product)
+                    .WithMany()
+                    .HasForeignKey(s => s.ProductId)
+                    .IsRequired(false);
+
             builder.ComplexProperty(sli => sli.EstimatedPrice, moneyBuilder =>
             {
                 moneyBuilder.Property(m => m.Amount)
